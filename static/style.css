@@ -1,5 +1,6 @@
 /* ============================================================
-   Kealin AI Novels — Modern Dark Theme
+   Kealin AI Novels — 超级进化版 Modern Dark Theme
+   55轮迭代优化，全面增强
    ============================================================ */
 
 :root {
@@ -87,6 +88,7 @@ body {
 .topbar-left { display: flex; align-items: center; gap: 12px; }
 .topbar-center { display: flex; align-items: center; }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
 
 .logo {
     display: flex;
@@ -108,6 +110,15 @@ body {
     background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.version-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    font-weight: 500;
 }
 
 .nav-tabs {
@@ -135,15 +146,45 @@ body {
 
 .stats-bar {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     font-size: 12px;
     color: var(--text-muted);
+    align-items: center;
 }
 
 .stat-item {
     padding: 4px 10px;
     background: var(--bg-surface);
     border-radius: var(--radius-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 写作目标进度条（第13、32轮） */
+.goal-progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.goal-progress-bar {
+    width: 60px;
+    height: 6px;
+    background: var(--bg-surface);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s var(--ease), background 0.3s var(--ease);
+}
+
+.goal-text {
+    font-size: 11px;
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
 }
 
@@ -428,6 +469,14 @@ textarea::placeholder { color: var(--text-muted); }
 
 .chapter-item:last-child { border-bottom: none; }
 
+.chapter-item[draggable="true"] {
+    cursor: grab;
+}
+
+.chapter-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
 .chapter-header {
     display: flex;
     align-items: center;
@@ -445,6 +494,8 @@ textarea::placeholder { color: var(--text-muted); }
     gap: 10px;
     font-weight: 500;
     font-size: 13px;
+    flex: 1;
+    min-width: 0;
 }
 
 .chapter-num {
@@ -458,6 +509,26 @@ textarea::placeholder { color: var(--text-muted); }
     justify-content: center;
     font-size: 11px;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+.chapter-title-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chapter-status {
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.chapter-chars {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 .chapter-arrow {
@@ -471,6 +542,7 @@ textarea::placeholder { color: var(--text-muted); }
 .chapter-actions {
     display: flex;
     gap: 4px;
+    align-items: center;
 }
 
 .chapter-body {
@@ -523,6 +595,11 @@ textarea::placeholder { color: var(--text-muted); }
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.ai-header-actions {
+    display: flex;
+    gap: 4px;
 }
 
 .ai-messages {
@@ -672,6 +749,168 @@ textarea::placeholder { color: var(--text-muted); }
     font-size: 12px;
     color: var(--danger);
     font-family: 'Noto Sans SC', monospace;
+}
+
+/* ============ Character Cards（第18轮） ============ */
+.character-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.character-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    cursor: pointer;
+}
+
+.character-name {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.character-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.character-info {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.char-field {
+    margin-bottom: 4px;
+}
+
+.char-label {
+    color: var(--text-muted);
+    margin-right: 4px;
+}
+
+/* ============ World Notes（第19轮） ============ */
+.world-note-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.note-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    cursor: pointer;
+}
+
+.note-title {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.note-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.note-preview {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* ============ Inspiration Notes（第46轮） ============ */
+.inspiration-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    padding: 8px 12px;
+}
+
+.inspiration-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.inspiration-date {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.inspiration-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.inspiration-content {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.inspiration-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    color: var(--text-muted);
+}
+
+/* ============ Version History（第36轮） ============ */
+.version-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.version-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.version-item:last-child { border-bottom: none; }
+
+.version-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.version-label {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.version-time {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.version-chapters {
+    font-size: 11px;
+    color: var(--text-secondary);
 }
 
 /* ============ Context Menu ============ */
