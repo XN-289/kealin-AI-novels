@@ -876,6 +876,323 @@ textarea::placeholder { color: var(--text-muted); }
     color: var(--text-muted);
 }
 
+/* ============ Permanent Memory（第56轮） ============ */
+.memory-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.memory-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.memory-content {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+    word-break: break-all;
+}
+
+.memory-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.memory-tips {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+}
+
+.memory-tips p {
+    margin: 0 0 8px 0;
+    color: var(--text-secondary);
+}
+
+.memory-tips ul {
+    margin: 0;
+    padding-left: 16px;
+    color: var(--text-muted);
+}
+
+.memory-tips li {
+    margin-bottom: 4px;
+}
+
+.section-hint {
+    font-size: 12px;
+    cursor: help;
+    margin-left: 4px;
+}
+
+/* ============ World Info 关键词触发（基于SillyTavern） ============ */
+.world-info-toggle {
+    margin-bottom: 10px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
+.world-info-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+}
+
+.world-info-disabled {
+    opacity: 0.5;
+}
+
+.world-info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.world-info-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.world-info-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.world-info-keywords {
+    font-size: 11px;
+    color: var(--accent-light);
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.world-info-secondary {
+    font-size: 11px;
+    color: var(--warning);
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.world-info-constant {
+    font-size: 11px;
+    color: var(--success);
+    margin-bottom: 4px;
+}
+
+.world-info-preview {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.badge-accent { background: var(--accent); color: white; }
+.badge-info { background: var(--info); color: white; }
+.badge-warning { background: var(--warning); color: var(--bg-deep); }
+.badge-ok { background: var(--success); color: white; }
+
+/* ============ AI味检测分数显示 ============ */
+.ai-score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ai-score-high { background: rgba(0, 184, 148, 0.2); color: var(--success); }
+.ai-score-medium { background: rgba(253, 203, 110, 0.2); color: var(--warning); }
+.ai-score-low { background: rgba(255, 107, 107, 0.2); color: var(--danger); }
+
+/* ============ 多阶段流水线进度 ============ */
+.pipeline-progress {
+    padding: 12px;
+}
+
+.pipeline-stage {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.pipeline-stage:last-child { border-bottom: none; }
+
+.pipeline-stage-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background: var(--bg-elevated);
+}
+
+.pipeline-stage-icon.active { background: var(--accent); color: white; }
+.pipeline-stage-icon.done { background: var(--success); color: white; }
+.pipeline-stage-icon.failed { background: var(--danger); color: white; }
+
+.pipeline-stage-name {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.pipeline-stage-status {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* ============ Rewrite Preview ============ */
+.rewrite-preview {
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.rewrite-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-light);
+}
+
+.rewrite-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.rewrite-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.8;
+    resize: vertical;
+}
+
+.rewrite-textarea:focus {
+    outline: none;
+}
+
+/* ============ Micro Controls（第57轮） ============ */
+.micro-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.micro-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-right: 4px;
+}
+
+.btn-xs {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.rewrite-preview {
+    background: var(--bg-surface);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-md);
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.rewrite-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.rewrite-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.rewrite-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.rewrite-textarea:focus {
+    outline: none;
+}
+
 /* ============ Version History（第36轮） ============ */
 .version-list {
     max-height: 400px;
@@ -939,6 +1256,30 @@ textarea::placeholder { color: var(--text-muted); }
 .context-menu-item:hover {
     background: var(--accent);
     color: white;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 8px;
+}
+
+.context-menu-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-light);
+    cursor: default;
+    padding: 6px 14px 4px;
+}
+
+.context-menu-header:hover {
+    background: transparent;
+    color: var(--accent-light);
+}
+
+.context-menu-sub {
+    padding-left: 24px;
+    font-size: 12px;
 }
 
 /* ============ Modal ============ */

@@ -12,6 +12,25 @@ import os
 import time
 from dotenv import load_dotenv
 
+# Import enhanced modules
+from modules.memory import (
+    HierarchicalMemory, ChapterSummary, parse_summary_text,
+    build_auto_summary_prompt, build_fact_extraction_prompt,
+)
+from modules.scene import (
+    SceneInfo, ChapterScenePlan, analyze_pacing, detect_scene_breaks,
+    build_scene_plan_prompt, build_scene_content_prompt,
+)
+from modules.character import (
+    CharacterCard, CharacterCardManager,
+    build_character_card_prompt_for_ai, build_all_characters_context,
+    build_character_consistency_prompt,
+)
+from modules.quality import (
+    QualityReport, generate_quality_report, build_quality_check_prompt,
+    calculate_ai_taste_score, analyze_readability,
+)
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -163,6 +182,12 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/docs")
+def docs():
+    """项目文档页面"""
+    return render_template("docs.html")
+
+
 @app.route("/gen", methods=["POST"])
 def generate():
     """主生成接口 - 用于大纲、章节、正文"""
@@ -263,7 +288,287 @@ def health_check():
                 "endpoint": CONFIG["secondary"]["api_endpoint"],
             }
         },
-        "version": "2.0.0"
+        "version": "2.1.0"
+    })
+
+
+# ============================================================
+# Enhanced API Endpoints (v2.2)
+# ============================================================
+
+
+@app.route("/api/memory/summary", methods=["POST"])
+def api_auto_summary():
+    """Generate a structured chapter summary using the memory system."""
+    data = request.json
+    chapter_content = data.get("content", "")
+    chapter_outline = data.get("outline", "")
+    chapter_idx = data.get("chapter_idx", -1)
+
+    if not chapter_content:
+        return jsonify({"error": "内容不能为空"}), 400
+
+    prompt = build_auto_summary_prompt(chapter_content, chapter_outline)
+
+    def generate():
+        yield from call_model(prompt, "secondary")
+
+    return Response(
+        generate(),
+        mimetype="text/plain",
+        headers={"X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/api/memory/extract-facts", methods=["POST"])
+def api_extract_facts():
+    """Extract key facts from chapter content for semantic memory."""
+    data = request.json
+    chapter_content = data.get("content", "")
+
+    if not chapter_content:
+        return jsonify({"error": "内容不能为空"}), 400
+
+    prompt = build_fact_extraction_prompt(chapter_content)
+
+    def generate():
+        yield from call_model(prompt, "secondary")
+
+    return Response(
+        generate(),
+        mimetype="text/plain",
+        headers={"X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/api/memory/search", methods=["POST"])
+def api_memory_search():
+    """Search memories using semantic index."""
+    data = request.json
+    memories_data = data.get("memories", {})
+    query = data.get("query", "")
+    top_k = data.get("top_k", 10)
+
+    if not query:
+        return jsonify({"error": "查询不能为空"}), 400
+
+    try:
+        memory = HierarchicalMemory.from_dict(memories_data)
+        results = memory.search_memories(query, top_k=top_k)
+        return jsonify({
+            "results": [
+                {"entry": entry.to_dict(), "score": round(score, 3)}
+                for entry, score in results
+            ]
+        })
+    except Exception as e:
+        logger.error(f"Memory search error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/scene/plan", methods=["POST"])
+def api_scene_plan():
+    """Generate a detailed scene plan for a chapter."""
+    data = request.json
+    chapter_outline = data.get("outline", "")
+    characters = data.get("characters", "")
+    style = data.get("style", "")
+    previous_summary = data.get("previous_summary", "")
+
+    if not chapter_outline:
+        return jsonify({"error": "章节大纲不能为空"}), 400
+
+    prompt = build_scene_plan_prompt(
+        chapter_outline, characters, style, previous_summary
+    )
+
+    def generate():
+        yield from call_model(prompt, "primary")
+
+    return Response(
+        generate(),
+        mimetype="text/plain",
+        headers={"X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/api/scene/analyze-pacing", methods=["POST"])
+def api_analyze_pacing():
+    """Analyze the pacing of a text passage."""
+    data = request.json
+    text = data.get("text", "")
+
+    if not text:
+        return jsonify({"error": "文本不能为空"}), 400
+
+    result = analyze_pacing(text)
+    breaks = detect_scene_breaks(text)
+    return jsonify({
+        "pacing": result,
+        "scene_breaks": breaks,
+    })
+
+
+@app.route("/api/character/card", methods=["POST"])
+def api_character_card():
+    """Convert simple character data to structured card or generate from text."""
+    data = request.json
+    mode = data.get("mode", "convert")  # convert, generate, check
+
+    if mode == "convert":
+        # Convert simple character to structured card
+        simple_chars = data.get("characters", [])
+        manager = CharacterCardManager.from_simple_list(simple_chars)
+        return jsonify({"cards": manager.to_dict()})
+
+    elif mode == "generate":
+        # Generate character card from description
+        description = data.get("description", "")
+        if not description:
+            return jsonify({"error": "角色描述不能为空"}), 400
+
+        prompt = f"""根据以下角色描述，生成一个详细的角色卡。
+
+【角色描述】
+{description}
+
+请按以下JSON格式输出：
+```json
+{{
+  "name": "角色名",
+  "role": "protagonist/antagonist/supporting/minor",
+  "age": "年龄",
+  "gender": "性别",
+  "appearance": "外貌描述",
+  "distinguishing_features": ["特征1", "特征2"],
+  "traits": [
+    {{"name": "性格特征", "description": "详细描述", "intensity": 7, "is_flaw": false}}
+  ],
+  "core_belief": "核心信念",
+  "motivation": "核心动机",
+  "fear": "最深恐惧",
+  "desire": "最渴望的东西",
+  "flaw": "主要缺陷",
+  "voice": {{
+    "speech_style": "说话风格",
+    "vocabulary_level": "词汇水平",
+    "catchphrases": ["口头禅"],
+    "verbal_tics": ["语言习惯"],
+    "sentence_length": "句子长度偏好",
+    "emotional_speech": {{"愤怒": "说话方式", "紧张": "说话方式"}},
+    "forbidden_words": ["不会说的词"]
+  }},
+  "backstory": "背景故事",
+  "key_memories": ["关键记忆"],
+  "secrets": ["秘密"],
+  "dialogue_rules": ["对话规则"],
+  "behavioral_rules": ["行为规则"]
+}}
+```"""
+
+        def generate():
+            yield from call_model(prompt, "primary")
+
+        return Response(
+            generate(),
+            mimetype="text/plain",
+            headers={"X-Accel-Buffering": "no"},
+        )
+
+    elif mode == "check":
+        # Check character consistency
+        card_data = data.get("card", {})
+        recent_text = data.get("text", "")
+
+        if not card_data or not recent_text:
+            return jsonify({"error": "缺少角色卡或文本"}), 400
+
+        card = CharacterCard.from_dict(card_data)
+        prompt = build_character_consistency_prompt(card, recent_text)
+
+        def generate():
+            yield from call_model(prompt, "secondary")
+
+        return Response(
+            generate(),
+            mimetype="text/plain",
+            headers={"X-Accel-Buffering": "no"},
+        )
+
+    return jsonify({"error": "无效的mode参数"}), 400
+
+
+@app.route("/api/quality/check", methods=["POST"])
+def api_quality_check():
+    """Run quality analysis on text."""
+    data = request.json
+    text = data.get("text", "")
+    check_type = data.get("check_type", "local")  # local, ai
+
+    if not text:
+        return jsonify({"error": "文本不能为空"}), 400
+
+    if check_type == "local":
+        # Local analysis (no API call)
+        report = generate_quality_report(text)
+        return jsonify(report.to_dict())
+
+    elif check_type == "ai":
+        # AI-powered quality check
+        focus = data.get("focus", "full")
+        prompt = build_quality_check_prompt(text, focus)
+
+        def generate():
+            yield from call_model(prompt, "secondary")
+
+        return Response(
+            generate(),
+            mimetype="text/plain",
+            headers={"X-Accel-Buffering": "no"},
+        )
+
+    return jsonify({"error": "无效的check_type"}), 400
+
+
+@app.route("/api/quality/batch", methods=["POST"])
+def api_quality_batch():
+    """Run quality analysis on multiple chapters."""
+    data = request.json
+    chapters = data.get("chapters", [])  # List of chapter texts
+
+    if not chapters:
+        return jsonify({"error": "章节列表不能为空"}), 400
+
+    reports = []
+    for i, text in enumerate(chapters):
+        if text and text.strip():
+            report = generate_quality_report(
+                text, chapter_idx=i, all_chapter_texts=chapters
+            )
+            reports.append({
+                "chapter_idx": i,
+                "report": report.to_dict(),
+            })
+
+    # Aggregate stats
+    if reports:
+        avg_overall = sum(r["report"]["overall_score"] for r in reports) / len(reports)
+        avg_ai = sum(r["report"]["ai_taste_score"] for r in reports) / len(reports)
+        avg_read = sum(r["report"]["readability_score"] for r in reports) / len(reports)
+        total_issues = sum(len(r["report"]["issues"]) for r in reports)
+    else:
+        avg_overall = avg_ai = avg_read = 0
+        total_issues = 0
+
+    return jsonify({
+        "chapters": reports,
+        "summary": {
+            "avg_overall_score": round(avg_overall),
+            "avg_ai_taste_score": round(avg_ai),
+            "avg_readability_score": round(avg_read),
+            "total_issues": total_issues,
+            "chapter_count": len(reports),
+        },
     })
 
 
@@ -272,7 +577,7 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     debug = os.getenv("DEBUG", "true").lower() == "true"
     print(f"\n{'='*50}")
-    print(f"  Kealin AI Novels 超级进化版 v2.0")
+    print(f"  Kealin AI Novels 超级进化版 v2.1")
     print(f"  访问地址: http://localhost:{port}")
     print(f"  健康检查: http://localhost:{port}/api/health")
     print(f"{'='*50}\n")
