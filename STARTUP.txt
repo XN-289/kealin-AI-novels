@@ -1,0 +1,48 @@
+Kealin AI Novels - Quick Start Guide
+======================================
+
+RECOMMENDED: Create Desktop Shortcut
+--------------------------------------
+1. Double-click: create-shortcut.bat
+2. A shortcut "Kealin AI Novels" will appear on Desktop
+3. Double-click the shortcut to start anytime!
+
+
+Other Ways to Start
+--------------------------------------
+
+Option 1: Double-click start.bat
+          - Starts service and opens browser automatically
+
+Option 2: Double-click stop.bat
+          - Stops the running service
+
+
+Common Issues
+--------------------------------------
+
+Q: Startup failed?
+A: Check these:
+   1. Python installed? (need Python 3.8+)
+   2. API Key in .env file correct?
+   3. Network can access API server?
+
+Q: Port occupied?
+A: Run stop.bat first, then start.bat
+
+Q: How to change model?
+A: Edit .env file:
+   PRIMARY_API_ENDPOINT=API_URL
+   PRIMARY_API_KEY=your_key
+   PRIMARY_MODEL=model_name
+
+
+Supported Models
+--------------------------------------
+- DeepSeek: https://api.deepseek.com/v1/chat/completions
+- Qwen: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+- Doubao: https://ark.cn-beijing.volces.com/api/v3/chat/completions
+- OpenAI: https://api.openai.com/v1/chat/completions
+
+
+URL: http://localhost:20000

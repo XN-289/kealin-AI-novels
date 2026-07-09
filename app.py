@@ -73,6 +73,7 @@ def stream_openai_compat(endpoint: str, headers: dict, payload: dict, timeout: i
 
     while retry_count < max_retries:
         try:
+            logger.info(f"调用API: {endpoint}, model: {payload.get('model')}")
             resp = requests.post(endpoint, headers=headers, json=payload, stream=True, timeout=timeout)
 
             if resp.status_code == 429:
@@ -171,6 +172,7 @@ def generate():
         return Response("错误: 空提示词", status=400)
 
     logger.info(f"收到生成请求，prompt长度: {len(prompt)}")
+    logger.info(f"使用模型: {CONFIG['primary']['model']}, endpoint: {CONFIG['primary']['api_endpoint']}")
 
     return Response(
         call_model(prompt, "primary"),

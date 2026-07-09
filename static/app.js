@@ -1993,14 +1993,19 @@ function bind(id, event, handler) {
 document.addEventListener("DOMContentLoaded", () => {
     console.log("[Kealin] DOMContentLoaded 开始初始化...");
 
+    // 变量提升到回调顶层 — 修复 try 块作用域导致后续所有按钮绑定失效的致命 bug
+    let promptOutline, promptChapter, promptContent;
+    let menuOutline, menuChapter, menuContent;
+    let genreSelect;
+
     try {
         // 初始化提示词默认值（先设默认值，loadState 会覆盖有保存数据的部分）
-        const promptOutline = $("#prompt-outline");
-        const promptChapter = $("#prompt-chapter");
-        const promptContent = $("#prompt-content");
-        const menuOutline = $("#menu-outline");
-        const menuChapter = $("#menu-chapter");
-        const menuContent = $("#menu-content");
+        promptOutline = $("#prompt-outline");
+        promptChapter = $("#prompt-chapter");
+        promptContent = $("#prompt-content");
+        menuOutline = $("#menu-outline");
+        menuChapter = $("#menu-chapter");
+        menuContent = $("#menu-content");
 
         if (promptOutline) promptOutline.value = DEFAULT_PROMPTS.outline;
         if (promptChapter) promptChapter.value = DEFAULT_PROMPTS.chapter;
@@ -2010,7 +2015,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (menuContent) menuContent.value = JSON.stringify(DEFAULT_MENUS.content, null, 2);
 
         // 初始化小说类型选择器
-        const genreSelect = $("#genre-selector");
+        genreSelect = $("#genre-selector");
         if (genreSelect) {
             Object.entries(GENRE_CONFIGS).forEach(([key, cfg]) => {
                 const opt = document.createElement("option");
@@ -2117,6 +2122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (msgs) msgs.innerHTML = '<div class="ai-msg ai-system">对话已清空</div>';
         saveState();
     });
+    bind("btn-search-chat", "click", showConversationSearch);
 
     // ---- 导入导出 ----
     bind("btn-export", "click", exportAll);
@@ -2143,6 +2149,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (promptContent) promptContent.value = DEFAULT_PROMPTS.content;
         saveState();
         toast("已恢复默认", "success");
+    });
+
+    // ---- 菜单恢复默认 ----
+    bind("btn-reset-menus", "click", () => {
+        if (menuOutline) menuOutline.value = JSON.stringify(DEFAULT_MENUS.outline, null, 2);
+        if (menuChapter) menuChapter.value = JSON.stringify(DEFAULT_MENUS.chapter, null, 2);
+        if (menuContent) menuContent.value = JSON.stringify(DEFAULT_MENUS.content, null, 2);
+        saveState();
+        toast("菜单配置已恢复默认", "success");
     });
 
     // ---- 模型配置 ----
@@ -2305,19 +2320,27 @@ async function loadModelConfig() {
         const resp = await fetch("/api/config");
         const config = await resp.json();
         if (config.primary) {
-            $("#cfg-primary-endpoint").value = config.primary.endpoint || "";
-            $("#cfg-primary-model").value = config.primary.model || "";
+            const epEl = $("#cfg-primary-endpoint");
+            const modelEl = $("#cfg-primary-model");
+            const tempEl = $("#cfg-primary-temp");
+            const tokensEl = $("#cfg-primary-tokens");
+            if (epEl) epEl.value = config.primary.endpoint || "";
+            if (modelEl) modelEl.value = config.primary.model || "";
+            if (tempEl) tempEl.value = config.primary.temperature ?? 0.8;
+            if (tokensEl) tokensEl.value = config.primary.max_tokens ?? 8192;
             const badge = $("#primary-status");
-            if (config.primary.has_key) {
+            if (badge && config.primary.has_key) {
                 badge.textContent = "已配置";
                 badge.className = "badge badge-ok";
             }
         }
         if (config.secondary) {
-            $("#cfg-secondary-endpoint").value = config.secondary.endpoint || "";
-            $("#cfg-secondary-model").value = config.secondary.model || "";
+            const epEl = $("#cfg-secondary-endpoint");
+            const modelEl = $("#cfg-secondary-model");
+            if (epEl) epEl.value = config.secondary.endpoint || "";
+            if (modelEl) modelEl.value = config.secondary.model || "";
             const badge = $("#secondary-status");
-            if (config.secondary.has_key) {
+            if (badge && config.secondary.has_key) {
                 badge.textContent = "已配置";
                 badge.className = "badge badge-ok";
             }
@@ -2332,9 +2355,11 @@ async function saveModelConfig(key) {
     const data = {
         model_key: key,
         api_endpoint: $(`#${prefix}-endpoint`).value,
-        api_key: $(`#${prefix}-key`).value,
         model: $(`#${prefix}-model`).value,
     };
+    // 仅在用户输入了新密钥时才发送，避免用空值覆盖已有密钥
+    const keyVal = $(`#${prefix}-key`).value;
+    if (keyVal) data.api_key = keyVal;
     if ($(`#${prefix}-temp`)) data.temperature = $(`#${prefix}-temp`).value;
     if ($(`#${prefix}-tokens`)) data.max_tokens = $(`#${prefix}-tokens`).value;
 
