@@ -1,6 +1,14 @@
 # Kealin AI Novels - Extended Modules
-# v2.2: Enhanced memory, scene control, character cards, quality checking
+# v3.0: Enhanced memory, scene control, character cards, quality checking, auth, database
 
+from .config import (
+    APP_VERSION, APP_NAME, APP_SUBTITLE,
+    BANNED_WORDS, AI_TRANSITION_WORDS, AI_WORD_MAPPINGS,
+    DEFAULT_HOST, DEFAULT_PORT, DEFAULT_DEBUG,
+    CN_CHAR_RATIO, EN_WORD_RATIO, PUNCT_RATIO,
+)
+from .auth import require_auth, get_api_secret, AUTH_ENABLED
+from .database import init_db, save_project_state, save_chapter, get_project_state, list_projects, get_chapters
 from .memory import (
     HierarchicalMemory, MemoryEntry, ChapterSummary, SemanticIndex,
     parse_summary_text, build_auto_summary_prompt, build_fact_extraction_prompt,
@@ -25,6 +33,15 @@ from .quality import (
 )
 
 __all__ = [
+    # Config
+    "APP_VERSION", "APP_NAME", "APP_SUBTITLE",
+    "BANNED_WORDS", "AI_TRANSITION_WORDS", "AI_WORD_MAPPINGS",
+    "DEFAULT_HOST", "DEFAULT_PORT", "DEFAULT_DEBUG",
+    "CN_CHAR_RATIO", "EN_WORD_RATIO", "PUNCT_RATIO",
+    # Auth
+    "require_auth", "get_api_secret", "AUTH_ENABLED",
+    # Database
+    "init_db", "save_project_state", "save_chapter", "get_project_state", "list_projects", "get_chapters",
     # Memory
     "HierarchicalMemory", "MemoryEntry", "ChapterSummary", "SemanticIndex",
     "parse_summary_text", "build_auto_summary_prompt", "build_fact_extraction_prompt",

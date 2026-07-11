@@ -6,7 +6,7 @@
     <title>Kealin AI Novels — 以假乱真的 AI 小说创作工具</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2.1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4.0.0">
 </head>
 <body>
     <!-- 顶部导航栏 -->
@@ -14,38 +14,51 @@
         <div class="topbar-left">
             <div class="logo">
                 <span class="logo-icon">✦</span>
-                <span class="logo-text">Kealin AI Novels</span>
-                <span class="version-badge">v2.1</span>
+                <span class="logo-text">Kealin</span>
+                <span class="version-badge">v4.1</span>
             </div>
         </div>
         <div class="topbar-center">
             <div class="nav-tabs">
-                <button class="nav-tab active" data-panel="workspace">创作工作台</button>
-                <button class="nav-tab" data-panel="prompts">提示词配置</button>
-                <button class="nav-tab" data-panel="settings">模型设置</button>
+                <button class="nav-tab active" data-panel="workspace">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    无限画布
+                </button>
+                <button class="nav-tab" data-panel="system">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    系统设置
+                </button>
             </div>
         </div>
         <div class="topbar-right">
             <div class="stats-bar">
-                <span class="stat-item" id="total-chars" title="总字数">字数: 0</span>
-                <span class="stat-item" id="chapter-count" title="章节数">章节: 0</span>
-                <span class="stat-item" id="today-chars" title="今日字数">今日: 0</span>
+                <span class="stat-item" id="total-chars" title="总字数">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                    0
+                </span>
+                <span class="stat-item" id="chapter-count" title="章节数">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    0
+                </span>
                 <div class="goal-progress-wrapper" title="今日目标">
                     <div class="goal-progress-bar">
                         <div id="goal-progress" class="goal-progress-fill"></div>
                     </div>
-                    <span id="goal-text" class="goal-text">0/2000字</span>
+                    <span id="goal-text" class="goal-text">0/2000</span>
                 </div>
             </div>
             <div class="topbar-actions">
                 <a href="/docs" class="btn-icon" id="btn-docs" title="项目文档" target="_blank">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </a>
-                <button class="btn-icon" id="btn-export" title="导出JSON">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <button class="btn-icon" id="btn-export" title="导出">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </button>
-                <button class="btn-icon" id="btn-import" title="导入配置">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <button class="btn-icon" id="btn-import" title="导入">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+                <button class="btn-icon btn-ai-toggle" id="btn-toggle-ai" title="AI 助手">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 </button>
             </div>
         </div>
@@ -54,182 +67,275 @@
     <!-- 主内容区 -->
     <main class="main-content">
 
-        <!-- ============ 创作工作台 ============ -->
+        <!-- ============ 画布工作台 ============ -->
         <div class="panel active" id="panel-workspace">
-            <div class="workspace-layout">
-                <!-- 左侧：设定面板 -->
-                <aside class="sidebar" id="sidebar">
-                    <div class="sidebar-toggle" id="sidebar-toggle">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                    </div>
-
-                    <!-- 小说类型选择 -->
+            <div class="canvas-layout">
+                <!-- 左侧导航栏（精简：项目选择 + 工具） -->
+                <nav class="sidebar" id="sidebar">
                     <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">📚</span>
-                            <span>小说类型</span>
+                        <div class="sidebar-section-title">项目</div>
+                        <div class="sidebar-item">
+                            <select id="genre-selector" class="sidebar-select">
+                                <option value="">选择类型...</option>
+                            </select>
                         </div>
-                        <select id="genre-selector" class="select-input">
-                            <option value="">选择类型...</option>
-                        </select>
                     </div>
 
-                    <!-- 基础设定 -->
                     <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">⚙️</span>
-                            <span>基础设定</span>
+                        <div class="sidebar-section-title">工具</div>
+                        <div class="sidebar-item" id="btn-book-analysis">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            <span>拆书分析</span>
                         </div>
-                        <div class="field-group">
-                            <label>小说背景</label>
-                            <textarea id="field-background" class="textarea-sm" placeholder="世界观、时代背景..."></textarea>
+                        <div class="sidebar-item" id="btn-consistency">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>一致性检查</span>
                         </div>
-                        <div class="field-group">
-                            <label>人物设定</label>
-                            <textarea id="field-characters" class="textarea-sm" placeholder="主角、配角的性格能力..."></textarea>
+                        <div class="sidebar-item" id="btn-reader-review">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span>读者审查</span>
                         </div>
-                        <div class="field-group">
-                            <label>角色关系</label>
-                            <textarea id="field-relationships" class="textarea-sm" placeholder="人物之间的关系..."></textarea>
+                        <div class="sidebar-item" id="btn-quality-batch">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <span>全书质检</span>
                         </div>
-                        <div class="field-group">
-                            <label>核心剧情</label>
-                            <textarea id="field-plot" class="textarea-sm" placeholder="故事主线、核心冲突..."></textarea>
+                        <div class="sidebar-item" id="btn-versions">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>版本历史</span>
                         </div>
-                        <div class="field-group">
-                            <label>写作风格</label>
-                            <textarea id="field-style" class="textarea-sm" placeholder="文风、节奏、语言特点..."></textarea>
+                        <div class="sidebar-item" id="btn-calendar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>写作日历</span>
                         </div>
                     </div>
 
-                    <!-- 角色管理（第18轮） -->
                     <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">👤</span>
-                            <span>角色管理</span>
+                        <div class="sidebar-section-title">创作资源</div>
+                        <div class="sidebar-item" id="btn-res-outline">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            <span>故事大纲</span>
                         </div>
-                        <div id="characters-container"></div>
-                        <button class="btn btn-outline btn-block" id="btn-add-character">+ 添加角色</button>
+                        <div class="sidebar-item" id="btn-res-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                            <span>小说书名生成</span>
+                        </div>
+                        <div class="sidebar-item" id="btn-res-world">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <span>世界观基础设定</span>
+                        </div>
+                        <div class="sidebar-item" id="btn-res-memory">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                            <span>记忆</span>
+                        </div>
+                        <div class="sidebar-item" id="btn-res-characters">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>角色</span>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- 画布主区域 -->
+                <div class="canvas-main" id="canvas-main">
+                    <!-- 画布工具栏 -->
+                    <div class="canvas-toolbar">
+                        <div class="canvas-tools-left">
+                            <button class="canvas-tool" id="btn-add-chapter" title="新增章节">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </button>
+                            <button class="canvas-tool canvas-tool-accent" id="btn-gen-all" title="批量生成全部章节正文">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+                                <span>批量生成</span>
+                            </button>
+                            <button class="canvas-tool" id="btn-gen-chapters" title="从大纲生成章节">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+                            </button>
+                            <div class="canvas-tool-divider"></div>
+                            <button class="canvas-tool" id="btn-auto-layout" title="自动排列">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            </button>
+                            <button class="canvas-tool" id="btn-export-txt" title="导出TXT">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                            </button>
+                        </div>
+                        <div class="canvas-tools-center">
+                            <span class="zoom-hint">滚轮缩放 · 拖拽平移 · Ctrl+拖拽框选 · 双击重置</span>
+                        </div>
+                        <div class="canvas-tools-right">
+                            <button class="canvas-tool" id="btn-zoom-out" title="缩小">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <span class="zoom-level" id="zoom-level">100%</span>
+                            <button class="canvas-tool" id="btn-zoom-in" title="放大">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <button class="canvas-tool" id="btn-zoom-fit" title="适应画布">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 世界观笔记（第19轮） -->
-                    <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">🌍</span>
-                            <span>世界观笔记</span>
-                        </div>
-                        <div id="world-notes-container"></div>
-                        <button class="btn btn-outline btn-block" id="btn-add-world-note">+ 添加笔记</button>
+                    <!-- 小地图 -->
+                    <div class="canvas-minimap" id="canvas-minimap">
+                        <div class="canvas-minimap-viewport" id="canvas-minimap-vp"></div>
                     </div>
 
-                    <!-- 灵感笔记（第46轮） -->
-                    <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">💡</span>
-                            <span>灵感笔记</span>
+                    <!-- 无限画布视口 -->
+                    <div class="canvas-viewport infinite-canvas-viewport" id="canvas-viewport">
+                        <div class="canvas-world infinite-canvas-world" id="canvas-world">
+
+                            <!-- SVG 连线层（章节卡片之间的连线） -->
+                            <svg class="chapter-connectors" id="chapter-connectors" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="ch-conn-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#5856D6" stop-opacity="0.8"/>
+                                        <stop offset="100%" stop-color="#007AFF" stop-opacity="0.4"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+
+                            <!-- 章节卡片容器（由 JS 动态渲染） -->
+                            <div id="canvas-chapters-container"></div>
                         </div>
-                        <div id="inspiration-container"></div>
-                        <button class="btn btn-outline btn-block" id="btn-add-inspiration">+ 记录灵感</button>
                     </div>
 
-                    <!-- 永久记忆（第56轮） -->
-                    <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">🧠</span>
-                            <span>永久记忆</span>
-                            <span class="section-hint" title="这些记忆会在每次生成正文时自动注入AI上下文">ℹ️</span>
-                        </div>
-                        <div class="memory-desc">作者主动添加的重要设定，每次生成时AI都会参考</div>
-                        <div id="permanent-memory-container"></div>
-                        <button class="btn btn-outline btn-block" id="btn-add-memory">+ 添加记忆</button>
-                    </div>
-
-                    <!-- 关键词触发式世界设定（基于SillyTavern World Info） -->
-                    <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">🌐</span>
-                            <span>世界设定触发</span>
-                            <span class="section-hint" title="当文本中出现特定关键词时，自动注入对应的世界设定到AI上下文">ℹ️</span>
-                        </div>
-                        <div class="memory-desc">设置关键词触发规则，AI生成时自动注入相关设定</div>
-                        <div class="world-info-toggle">
-                            <label class="toggle-label">
-                                <input type="checkbox" id="world-info-enabled" checked>
-                                <span>启用关键词触发</span>
-                            </label>
-                        </div>
-                        <div id="world-info-container"></div>
-                        <button class="btn btn-outline btn-block" id="btn-add-world-info">+ 添加触发规则</button>
-                    </div>
-
-                    <!-- 快捷操作 -->
-                    <div class="sidebar-section">
-                        <div class="section-header">
-                            <span class="section-icon">⚡</span>
-                            <span>快捷操作</span>
-                        </div>
-                        <button class="btn btn-accent btn-block" id="btn-gen-title">AI 生成书名</button>
-                        <button class="btn btn-accent btn-block" id="btn-gen-summary">AI 生成简介</button>
-                        <button class="btn btn-outline btn-block" id="btn-mindmap">思维导图</button>
-                        <button class="btn btn-outline btn-block" id="btn-book-analysis">拆书分析</button>
-                        <button class="btn btn-outline btn-block" id="btn-consistency">一致性检查</button>
-                        <button class="btn btn-outline btn-block" id="btn-reader-review">读者视角审查</button>
-                        <button class="btn btn-outline btn-block" id="btn-versions">版本历史</button>
-                        <button class="btn btn-outline btn-block" id="btn-calendar">写作日历</button>
-                    </div>
-                </aside>
-
-                <!-- 中间：核心创作区 -->
-                <div class="workspace-main">
-                    <!-- 大纲区 -->
-                    <div class="card" id="card-outline">
-                        <div class="card-header">
-                            <h2 class="card-title">
-                                <span class="card-icon">📋</span>
-                                故事大纲
-                            </h2>
-                            <div class="card-actions">
-                                <button class="btn btn-sm btn-primary" id="btn-gen-outline">AI 生成大纲</button>
-                                <button class="btn btn-sm btn-ghost" id="btn-regen-outline">重新生成</button>
-                                <button class="btn btn-sm btn-ghost" id="btn-preview-prompts">预览提示词</button>
+                    <!-- 章节详情浮动面板 -->
+                    <div class="chapter-detail-panel" id="chapter-detail-panel" style="display:none;">
+                        <div class="cdp-header">
+                            <div class="cdp-title-area">
+                                <span class="cdp-chapter-num" id="cdp-chapter-num">1</span>
+                                <span class="cdp-chapter-title" id="cdp-chapter-title">章节标题</span>
+                            </div>
+                            <div class="cdp-header-actions">
+                                <button class="btn btn-sm btn-ghost" id="cdp-btn-prev" title="上一章">‹</button>
+                                <button class="btn btn-sm btn-ghost" id="cdp-btn-next" title="下一章">›</button>
+                                <button class="btn-icon btn-sm" id="cdp-btn-close" title="关闭">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <textarea id="outline" class="textarea-main" placeholder="点击「AI 生成大纲」自动创建，或在此手动编写..."></textarea>
-                        <div class="card-footer">
-                            <span class="char-count" data-target="outline">0 字</span>
+                        <div class="cdp-tabs">
+                            <button class="cdp-tab active" data-cdptab="outline">细纲</button>
+                            <button class="cdp-tab" data-cdptab="content">正文</button>
+                            <button class="cdp-tab" data-cdptab="scene">场景配置</button>
+                            <button class="cdp-tab" data-cdptab="tools">工具</button>
+                        </div>
+                        <div class="cdp-body">
+                            <!-- 细纲 tab -->
+                            <div class="cdp-tab-content active" id="cdp-tab-outline">
+                                <textarea class="cdp-textarea" id="cdp-outline" placeholder="在此编辑章节细纲..."></textarea>
+                            </div>
+                            <!-- 正文 tab -->
+                            <div class="cdp-tab-content" id="cdp-tab-content">
+                                <div class="cdp-content-toolbar">
+                                    <button class="btn btn-sm btn-primary" id="cdp-btn-gen-content">生成正文</button>
+                                    <button class="btn btn-sm btn-ghost" id="cdp-btn-copy-content" title="复制正文">复制</button>
+                                </div>
+                                <textarea class="cdp-textarea cdp-textarea-tall" id="cdp-content" placeholder="点击「生成正文」或在此手动编写..."></textarea>
+                                <div class="cdp-micro-controls">
+                                    <span class="cdp-micro-label">选中文本：</span>
+                                    <button class="btn btn-xs btn-ghost" data-cdp-action="rewrite">重写</button>
+                                    <button class="btn btn-xs btn-ghost" data-cdp-action="expand">扩写</button>
+                                    <button class="btn btn-xs btn-ghost" data-cdp-action="compress">缩写</button>
+                                    <button class="btn btn-xs btn-ghost" data-cdp-action="dialogue">改对话</button>
+                                    <button class="btn btn-xs btn-ghost" data-cdp-action="describe">加描写</button>
+                                </div>
+                            </div>
+                            <!-- 场景配置 tab -->
+                            <div class="cdp-tab-content" id="cdp-tab-scene">
+                                <div class="cdp-scene-form" id="cdp-scene-form"></div>
+                            </div>
+                            <!-- 工具 tab -->
+                            <div class="cdp-tab-content" id="cdp-tab-tools">
+                                <div class="cdp-tools-grid">
+                                    <button class="cdp-tool-btn" id="cdp-btn-preview">
+                                        <span class="cdp-tool-icon">👁</span>
+                                        <span class="cdp-tool-name">预览</span>
+                                    </button>
+                                    <button class="cdp-tool-btn" id="cdp-btn-consistency">
+                                        <span class="cdp-tool-icon">✅</span>
+                                        <span class="cdp-tool-name">一致性检查</span>
+                                    </button>
+                                    <button class="cdp-tool-btn" id="cdp-btn-scene-plan">
+                                        <span class="cdp-tool-icon">🎬</span>
+                                        <span class="cdp-tool-name">场景规划</span>
+                                    </button>
+                                    <button class="cdp-tool-btn" id="cdp-btn-quality">
+                                        <span class="cdp-tool-icon">🔍</span>
+                                        <span class="cdp-tool-name">质量检查</span>
+                                    </button>
+                                    <button class="cdp-tool-btn" id="cdp-btn-pacing">
+                                        <span class="cdp-tool-icon">📊</span>
+                                        <span class="cdp-tool-name">节奏分析</span>
+                                    </button>
+                                    <button class="cdp-tool-btn" id="cdp-btn-copy-outline">
+                                        <span class="cdp-tool-icon">📋</span>
+                                        <span class="cdp-tool-name">复制细纲</span>
+                                    </button>
+                                </div>
+                                <div class="cdp-tool-result" id="cdp-tool-result"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 章节区 -->
-                    <div class="card" id="card-chapters">
-                        <div class="card-header">
-                            <h2 class="card-title">
-                                <span class="card-icon">📖</span>
-                                章节管理
-                            </h2>
-                            <div class="card-actions">
-                                <button class="btn btn-sm btn-primary" id="btn-gen-chapters">从大纲生成章节</button>
-                                <button class="btn btn-sm btn-accent" id="btn-gen-all">一键生成全部正文</button>
-                                <button class="btn btn-sm btn-ghost" id="btn-add-chapter">+ 新增章节</button>
-                                <button class="btn btn-sm btn-ghost" id="btn-export-txt">导出TXT</button>
-                                <button class="btn btn-sm btn-ghost" id="btn-export-md">导出MD</button>
-                                <button class="btn btn-sm btn-ghost btn-danger" id="btn-reset-chapters">清空章节</button>
+                    <!-- 故事大纲浮动面板 -->
+                    <div class="master-outline-panel" id="master-outline-panel" style="display:none;">
+                        <div class="mop-header">
+                            <div class="mop-title-area">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span>故事大纲</span>
+                            </div>
+                            <div class="mop-header-actions">
+                                <button class="btn-icon btn-sm" id="mop-btn-close" title="关闭">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <div id="chapters-container"></div>
+                        <div class="mop-body">
+                            <p class="mop-hint">输入你的故事构思（200-300字），AI 会自动扩充成200章的完整大纲。</p>
+                            <textarea class="mop-textarea" id="master-story-description" placeholder="在这里写你的故事构思（200-300字）...&#10;&#10;例如：&#10;主角是一个普通的大学生，某天突然获得了回到过去的能力。&#10;他想要改变自己的人生，但每次改变都会带来意想不到的后果。&#10;最终他发现，真正的改变不是回到过去，而是面对现在。" rows="6"></textarea>
+                            <p class="mop-hint" style="margin-top: 8px; font-size: 12px; color: #888;">或者直接编辑已有的大纲：</p>
+                            <textarea class="mop-textarea" id="master-outline-textarea" placeholder="在这里写你的故事大纲...&#10;&#10;例如：&#10;主角是一个...，他想要...&#10;但是遇到了...的阻碍&#10;最终..." rows="10"></textarea>
+                            <div class="mop-actions">
+                                <button class="btn btn-primary" id="mop-btn-gen-outline">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+                                    AI 生成大纲
+                                </button>
+                                <button class="btn btn-accent" id="mop-btn-gen-chapters">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+                                    从大纲生成章节细纲
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- 选中卡片后的浮动操作栏 -->
+                    <div class="selection-toolbar" id="selection-toolbar" style="display:none;">
+                        <span class="selection-count" id="selection-count">已选 0 项</span>
+                        <div class="selection-divider"></div>
+                        <button class="selection-action-btn selection-delete-btn" id="selection-delete-btn" title="删除选中 (Delete)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            删除
+                        </button>
+                    </div>
+
                 </div>
 
-                <!-- 右侧：AI 助手 -->
+                <!-- 右侧 AI 助手面板 -->
                 <aside class="ai-sidebar" id="ai-sidebar">
                     <div class="ai-header">
-                        <h3>AI 助手</h3>
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            AI 助手
+                        </h3>
                         <div class="ai-header-actions">
                             <button class="btn-icon btn-sm" id="btn-search-chat" title="搜索对话">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             </button>
                             <button class="btn-icon btn-sm" id="btn-clear-chat" title="清空对话">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                            <button class="btn-icon btn-sm" id="btn-close-ai" title="关闭">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>
                     </div>
@@ -238,273 +344,300 @@
                     </div>
                     <div class="ai-input-area">
                         <textarea id="ai-input" placeholder="输入问题... Enter 发送，Shift+Enter 换行" rows="2"></textarea>
-                        <button class="btn btn-primary btn-sm" id="btn-send-ai">发送</button>
+                        <button class="btn btn-primary btn-sm" id="btn-send-ai">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
                     </div>
                 </aside>
             </div>
         </div>
 
-        <!-- ============ 提示词配置 ============ -->
-        <div class="panel" id="panel-prompts">
-            <div class="prompts-layout">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">📝</span>大纲提示词</h2>
-                        <button class="btn btn-sm btn-ghost" id="btn-reset-outline-prompt">恢复默认</button>
-                    </div>
-                    <textarea id="prompt-outline" class="textarea-main textarea-tall"></textarea>
+        <!-- ============ 章节画布（无限画布模式） ============ -->
+        <!-- ============ 系统设置（提示词 + 模型配置） ============ -->
+        <div class="panel" id="panel-system">
+            <div class="system-layout">
+                <div class="system-subtabs">
+                    <button class="system-subtab active" data-subtab="prompts">提示词配置</button>
+                    <button class="system-subtab" data-subtab="model-settings">模型设置</button>
+                    <button class="system-subtab" data-subtab="anti-ai">反AI味引擎</button>
+                    <button class="system-subtab" data-subtab="help">使用说明</button>
                 </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">📑</span>章节提示词</h2>
-                        <button class="btn btn-sm btn-ghost" id="btn-reset-chapter-prompt">恢复默认</button>
-                    </div>
-                    <textarea id="prompt-chapter" class="textarea-main textarea-tall"></textarea>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">✍️</span>正文提示词</h2>
-                        <button class="btn btn-sm btn-ghost" id="btn-reset-content-prompt">恢复默认</button>
-                    </div>
-                    <textarea id="prompt-content" class="textarea-main textarea-tall"></textarea>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">📋</span>摘要提示词</h2>
-                        <button class="btn btn-sm btn-ghost" id="btn-reset-summary-prompt">恢复默认</button>
-                    </div>
-                    <p class="help-text" style="margin-bottom:12px;color:var(--text-muted);font-size:12px;">用于自动生成章节摘要，帮助AI保持长篇小说的连贯性</p>
-                    <textarea id="prompt-summary" class="textarea-main textarea-tall"></textarea>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">🖱️</span>右键菜单提示词</h2>
-                        <button class="btn btn-sm btn-ghost" id="btn-reset-menus">恢复默认</button>
-                    </div>
-                    <div class="context-menu-configs">
-                        <div class="field-group">
-                            <label>大纲右键菜单 (JSON)</label>
-                            <textarea id="menu-outline" class="textarea-main textarea-md"></textarea>
-                        </div>
-                        <div class="field-group">
-                            <label>章节右键菜单 (JSON)</label>
-                            <textarea id="menu-chapter" class="textarea-main textarea-md"></textarea>
-                        </div>
-                        <div class="field-group">
-                            <label>正文右键菜单 (JSON)</label>
-                            <textarea id="menu-content" class="textarea-main textarea-md"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ============ 模型设置 ============ -->
-        <div class="panel" id="panel-settings">
-            <div class="settings-layout">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">🤖</span>主模型配置</h2>
-                        <span class="badge" id="primary-status">未配置</span>
-                    </div>
-                    <div class="settings-form">
-                        <div class="field-group">
-                            <label>API Endpoint</label>
-                            <input type="text" id="cfg-primary-endpoint" class="input" placeholder="https://api.deepseek.com/v1/chat/completions">
-                        </div>
-                        <div class="field-group">
-                            <label>API Key</label>
-                            <input type="password" id="cfg-primary-key" class="input" placeholder="sk-...">
-                        </div>
-                        <div class="field-group">
-                            <label>模型名称</label>
-                            <input type="text" id="cfg-primary-model" class="input" placeholder="deepseek-chat">
-                        </div>
-                        <div class="field-row">
-                            <div class="field-group">
-                                <label>Temperature</label>
-                                <input type="number" id="cfg-primary-temp" class="input" value="0.8" step="0.1" min="0" max="2">
+                <!-- 提示词配置 -->
+                <div class="system-subtab-content active" id="subtab-prompts">
+                    <div class="prompts-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">大纲提示词</h2>
+                                <button class="btn btn-sm btn-ghost" id="btn-reset-outline-prompt">恢复默认</button>
                             </div>
-                            <div class="field-group">
-                                <label>Max Tokens</label>
-                                <input type="number" id="cfg-primary-tokens" class="input" value="8192" step="512">
+                            <p class="help-text">输入基础设定后，AI根据此提示词生成故事大纲。核心逻辑：先找故事"发动机"（主角欲望/缺陷/核心矛盾），再搭骨架，每个节拍要让读者想继续看。</p>
+                            <textarea id="prompt-outline" class="textarea-main textarea-tall"></textarea>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">章节提示词</h2>
+                                <button class="btn btn-sm btn-ghost" id="btn-reset-chapter-prompt">恢复默认</button>
+                            </div>
+                            <p class="help-text">将大纲拆成章节细纲。核心逻辑：每章必须有明确事件，承上启下要有因果链，场景思维（具体地点+人物+事件），钩子强度标注。</p>
+                            <textarea id="prompt-chapter" class="textarea-main textarea-tall"></textarea>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">正文提示词</h2>
+                                <button class="btn btn-sm btn-ghost" id="btn-reset-content-prompt">恢复默认</button>
+                            </div>
+                            <p class="help-text">根据细纲生成正文。包含<strong>风格进化机制</strong>：每章生成前会读取上一章的实际风格作为标杆，只能更好不能退步。还包含完整的去AI味规则和写作规范。</p>
+                            <textarea id="prompt-content" class="textarea-main textarea-tall"></textarea>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">摘要提示词</h2>
+                                <button class="btn btn-sm btn-ghost" id="btn-reset-summary-prompt">恢复默认</button>
+                            </div>
+                            <p class="help-text">每章生成后自动创建结构化摘要，作为"故事圣经"条目。记录：本章事件、角色状态变化、伏笔埋收、情绪走向、结尾状态等，确保AI不会"失忆"。</p>
+                            <textarea id="prompt-summary" class="textarea-main textarea-tall"></textarea>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">右键菜单提示词</h2>
+                                <button class="btn btn-sm btn-ghost" id="btn-reset-menus">恢复默认</button>
+                            </div>
+                            <p class="help-text">选中文本后右键弹出的AI操作菜单。包含：大纲评分/加强冲突/加因果链、章节评分/加事件驱动/加悬念钩子、AI味检测/去AI味重写/压缩精简/改对话等。</p>
+                            <div class="context-menu-configs">
+                                <div class="field-group">
+                                    <label>大纲右键菜单 (JSON)</label>
+                                    <textarea id="menu-outline" class="textarea-main textarea-md"></textarea>
+                                </div>
+                                <div class="field-group">
+                                    <label>章节右键菜单 (JSON)</label>
+                                    <textarea id="menu-chapter" class="textarea-main textarea-md"></textarea>
+                                </div>
+                                <div class="field-group">
+                                    <label>正文右键菜单 (JSON)</label>
+                                    <textarea id="menu-content" class="textarea-main textarea-md"></textarea>
+                                </div>
                             </div>
                         </div>
-                        <button class="btn btn-primary" id="btn-save-primary">保存主模型配置</button>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">🔧</span>辅助模型配置</h2>
-                        <span class="badge" id="secondary-status">未配置</span>
-                    </div>
-                    <div class="settings-form">
-                        <div class="field-group">
-                            <label>API Endpoint</label>
-                            <input type="text" id="cfg-secondary-endpoint" class="input" placeholder="同主模型或低成本模型">
+                <!-- 模型设置 -->
+                <div class="system-subtab-content" id="subtab-model-settings">
+                    <div class="settings-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">主模型配置</h2>
+                                <span class="badge" id="primary-status">未配置</span>
+                            </div>
+                            <div class="settings-form">
+                                <div class="field-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="cfg-primary-endpoint" class="input" placeholder="https://api.deepseek.com/v1/chat/completions">
+                                </div>
+                                <div class="field-group">
+                                    <label>API Key</label>
+                                    <input type="password" id="cfg-primary-key" class="input" placeholder="sk-...">
+                                </div>
+                                <div class="field-group">
+                                    <label>模型名称</label>
+                                    <input type="text" id="cfg-primary-model" class="input" placeholder="deepseek-chat">
+                                </div>
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label>Temperature</label>
+                                        <input type="number" id="cfg-primary-temp" class="input" value="0.8" step="0.1" min="0" max="2">
+                                    </div>
+                                    <div class="field-group">
+                                        <label>Max Tokens</label>
+                                        <input type="number" id="cfg-primary-tokens" class="input" value="8192" step="512">
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" id="btn-save-primary">保存主模型配置</button>
+                            </div>
                         </div>
-                        <div class="field-group">
-                            <label>API Key</label>
-                            <input type="password" id="cfg-secondary-key" class="input" placeholder="留空则使用主模型">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">辅助模型配置</h2>
+                                <span class="badge" id="secondary-status">未配置</span>
+                            </div>
+                            <div class="settings-form">
+                                <div class="field-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="cfg-secondary-endpoint" class="input" placeholder="同主模型或低成本模型">
+                                </div>
+                                <div class="field-group">
+                                    <label>API Key</label>
+                                    <input type="password" id="cfg-secondary-key" class="input" placeholder="留空则使用主模型">
+                                </div>
+                                <div class="field-group">
+                                    <label>模型名称</label>
+                                    <input type="text" id="cfg-secondary-model" class="input" placeholder="deepseek-chat">
+                                </div>
+                                <button class="btn btn-primary" id="btn-save-secondary">保存辅助模型配置</button>
+                            </div>
                         </div>
-                        <div class="field-group">
-                            <label>模型名称</label>
-                            <input type="text" id="cfg-secondary-model" class="input" placeholder="deepseek-chat">
-                        </div>
-                        <button class="btn btn-primary" id="btn-save-secondary">保存辅助模型配置</button>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">🛡️</span>反 AI 味引擎 v2.0</h2>
-                    </div>
-                    <div class="help-content">
-                        <p>本系统的提示词经过55轮迭代优化，从源头压制 AI 写作的典型毛病。以下是核心机制：</p>
-
-                        <h4>🚫 禁止清单（40+个禁用词，出现即重写）</h4>
-                        <p>以下词句是 AI 写作的指纹，正文提示词中已内置检测：</p>
-                        <div class="banned-words">
-                            <span class="banned-tag">心中一凛</span>
-                            <span class="banned-tag">眼中闪过一丝</span>
-                            <span class="banned-tag">嘴角勾起一抹</span>
-                            <span class="banned-tag">一股XX涌上心头</span>
-                            <span class="banned-tag">仿佛XX一般</span>
-                            <span class="banned-tag">宛如XX</span>
-                            <span class="banned-tag">不由得</span>
-                            <span class="banned-tag">情不自禁</span>
-                            <span class="banned-tag">目光深邃</span>
-                            <span class="banned-tag">意味深长</span>
-                            <span class="banned-tag">若有所思</span>
-                            <span class="banned-tag">恍然大悟</span>
-                            <span class="banned-tag">不禁XX</span>
-                            <span class="banned-tag">眉头微蹙</span>
-                            <span class="banned-tag">嘴角上扬</span>
-                            <span class="banned-tag">心中暗道</span>
-                            <span class="banned-tag">不觉间</span>
-                            <span class="banned-tag">霎时间</span>
-                            <span class="banned-tag">此刻的他</span>
-                            <span class="banned-tag">他深知</span>
-                            <span class="banned-tag">无疑</span>
-                            <span class="banned-tag">显然</span>
-                            <span class="banned-tag">毫无疑问</span>
-                            <span class="banned-tag">不言而喻</span>
-                            <span class="banned-tag">与此同时</span>
-                            <span class="banned-tag">就在这时</span>
-                            <span class="banned-tag">突然间</span>
-                            <span class="banned-tag">猛然间</span>
-                            <span class="banned-tag">刹那间</span>
-                            <span class="banned-tag">恍惚间</span>
-                            <span class="banned-tag">不知不觉</span>
-                            <span class="banned-tag">本能地</span>
-                            <span class="banned-tag">下意识地</span>
-                            <span class="banned-tag">条件反射般</span>
-                            <span class="banned-tag">如同XX一般</span>
-                            <span class="banned-tag">好似XX</span>
-                            <span class="banned-tag">恰似XX</span>
+                <!-- 反AI味引擎 -->
+                <div class="system-subtab-content" id="subtab-anti-ai">
+                    <div class="settings-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">反 AI 味引擎 v4.1</h2>
+                            </div>
+                            <div class="help-content">
+                                <p>融合了 Blake Snyder《救猫咪》节拍表、海明威冰山理论、余华冷叙事、云辉随笔风格等写作方法论，并整合了小说QA系统的10大检查维度。从源头压制AI写作的典型毛病。</p>
+                                <h4>禁止清单（50+个禁用词）</h4>
+                                <div class="banned-words">
+                                    <span class="banned-tag">心中一凛</span>
+                                    <span class="banned-tag">眼中闪过一丝</span>
+                                    <span class="banned-tag">嘴角勾起一抹</span>
+                                    <span class="banned-tag">一股XX涌上心头</span>
+                                    <span class="banned-tag">仿佛XX一般</span>
+                                    <span class="banned-tag">宛如XX</span>
+                                    <span class="banned-tag">不由得</span>
+                                    <span class="banned-tag">情不自禁</span>
+                                    <span class="banned-tag">目光深邃</span>
+                                    <span class="banned-tag">意味深长</span>
+                                    <span class="banned-tag">若有所思</span>
+                                    <span class="banned-tag">恍然大悟</span>
+                                    <span class="banned-tag">不禁XX</span>
+                                    <span class="banned-tag">眉头微蹙</span>
+                                    <span class="banned-tag">嘴角上扬</span>
+                                    <span class="banned-tag">心中暗道</span>
+                                    <span class="banned-tag">不觉间</span>
+                                    <span class="banned-tag">霎时间</span>
+                                    <span class="banned-tag">此刻的他</span>
+                                    <span class="banned-tag">他深知</span>
+                                    <span class="banned-tag">指节发白</span>
+                                    <span class="banned-tag">指节泛白</span>
+                                    <span class="banned-tag">手心出汗</span>
+                                    <span class="banned-tag">心跳漏了一拍</span>
+                                    <span class="banned-tag">愣了一下</span>
+                                    <span class="banned-tag">忽然觉得</span>
+                                </div>
+                                <h4>结构规则</h4>
+                                <ul>
+                                    <li><strong>句子长短交替</strong> — 禁止通篇 15-25 字的"标准句"</li>
+                                    <li><strong>"的"字密度</strong> — 每段不超过 3 个</li>
+                                    <li><strong>禁止排比句</strong> — "他感到…他感到…他感到…"直接扣分</li>
+                                    <li><strong>禁止段尾总结抒情</strong> — "这就是XX的意义啊"全部删掉</li>
+                                    <li><strong>禁止结构化对比</strong> — "不是XX而是XX"改成自然说法</li>
+                                    <li><strong>禁止议论文过渡词</strong> — "首先…其次…最后…"删掉</li>
+                                    <li><strong>信息密度</strong> — 每段必须有新信息，禁止原地踏步</li>
+                                    <li><strong>感官细节</strong> — 用具体感官替代抽象形容</li>
+                                    <li><strong>场景切入多样化</strong> — 不要每段都用"时间状语+主句"开头</li>
+                                </ul>
+                                <h4>对话规则</h4>
+                                <ul>
+                                    <li>每句对话必须：暴露信息 / 暴露性格 / 推动行动（三选一）</li>
+                                    <li>不同角色说话方式必须不同</li>
+                                    <li>用动作代替"XX说道"、"XX淡淡道"</li>
+                                    <li>要有打断、跑题、答非所问</li>
+                                    <li>对话要有潜台词</li>
+                                </ul>
+                                <h4>情绪规则</h4>
+                                <ul>
+                                    <li>用动作和结果表达情绪，不要写"他很愤怒"</li>
+                                    <li>禁止大段心理独白</li>
+                                    <li>让读者从行为中自己感受</li>
+                                </ul>
+                                <h4>开头和结尾</h4>
+                                <ul>
+                                    <li><strong>黄金200字</strong> — 每章开头必须有冲突或悬念</li>
+                                    <li><strong>结尾钩子</strong> — 每章结尾必须留悬念</li>
+                                    <li><strong>信息投喂</strong> — 每章至少透露一个新信息</li>
+                                </ul>
+                                <h4>质量检测维度（融合小说QA系统）</h4>
+                                <ul>
+                                    <li><strong>人设一致性</strong> — 性格、口头禅、行为习惯前后统一</li>
+                                    <li><strong>时间线一致性</strong> — 事件先后顺序、日期年份不矛盾</li>
+                                    <li><strong>情节逻辑</strong> — 因果关系成立、动机充分</li>
+                                    <li><strong>对话合理性</strong> — 说话方式符合人设、引用事件准确</li>
+                                    <li><strong>伏笔闭环</strong> — 已埋伏笔有回收、无悬而未决的线索</li>
+                                    <li><strong>场景一致性</strong> — 地点描述、空间布局前后统一</li>
+                                    <li><strong>情感逻辑</strong> — 情绪反应与刺激匹配、转变有过渡</li>
+                                    <li><strong>文风自然度</strong> — 无跨章自我复制、无结构化输出</li>
+                                </ul>
+                            </div>
                         </div>
-
-                        <h4>📐 结构规则</h4>
-                        <ul>
-                            <li><strong>句子长短交替</strong> — 禁止通篇 15-25 字的"标准句"</li>
-                            <li><strong>"的"字密度</strong> — 每段不超过 3 个</li>
-                            <li><strong>禁止排比句</strong> — "他感到…他感到…他感到…"直接扣分</li>
-                            <li><strong>禁止段尾总结抒情</strong> — "这就是XX的意义啊"全部删掉</li>
-                            <li><strong>信息密度</strong> — 每段必须有新信息，禁止原地踏步</li>
-                            <li><strong>感官细节</strong> — 用具体感官替代抽象形容</li>
-                        </ul>
-
-                        <h4>💬 对话规则</h4>
-                        <ul>
-                            <li>每句对话必须：暴露信息 / 暴露性格 / 推动行动（三选一）</li>
-                            <li>不同角色说话方式必须不同</li>
-                            <li>用动作代替"XX说道"、"XX淡淡道"</li>
-                            <li>要有打断、跑题、答非所问</li>
-                            <li>对话要有潜台词</li>
-                        </ul>
-
-                        <h4>🎭 情绪规则</h4>
-                        <ul>
-                            <li>用动作和结果表达情绪，不要写"他很愤怒"</li>
-                            <li>禁止大段心理独白</li>
-                            <li>让读者从行为中自己感受</li>
-                        </ul>
-
-                        <h4>📖 开头和结尾</h4>
-                        <ul>
-                            <li><strong>黄金200字</strong> — 每章开头必须有冲突或悬念</li>
-                            <li><strong>结尾钩子</strong> — 每章结尾必须留悬念</li>
-                            <li><strong>信息投喂</strong> — 每章至少透露一个新信息</li>
-                        </ul>
-
-                        <h4>🖱️ 右键菜单（15项操作）</h4>
-                        <ul>
-                            <li><strong>AI味检测</strong> — 10项维度检测，0-100分</li>
-                            <li><strong>去AI味重写</strong> — 按禁用词清单 + 结构规则重写</li>
-                            <li><strong>压缩精简</strong> — 砍废话，字数减40%信息量不减</li>
-                            <li><strong>砍形容词</strong> — "温暖的阳光"→"阳光"</li>
-                            <li><strong>加动作写情绪</strong> — 把形容词情绪改成行为描写</li>
-                            <li><strong>加口语感</strong> — 像讲故事不像写作文</li>
-                            <li><strong>加伏笔</strong> — 添加前后呼应的伏笔</li>
-                            <li><strong>改节奏</strong> — 调整快慢节奏</li>
-                            <li><strong>加感官描写</strong> — 用五感替代抽象描述</li>
-                            <li><strong>续写</strong> — 根据上下文自动续写</li>
-                            <li><strong>改写风格</strong> — 改写为不同风格</li>
-                        </ul>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><span class="card-icon">📖</span>使用说明</h2>
-                    </div>
-                    <div class="help-content">
-                        <h4>支持的模型</h4>
-                        <p>所有 OpenAI 兼容格式均可：</p>
-                        <ul>
-                            <li><strong>DeepSeek</strong> — api.deepseek.com/v1/chat/completions</li>
-                            <li><strong>通义千问</strong> — dashscope.aliyuncs.com/compatible-mode/v1/chat/completions</li>
-                            <li><strong>豆包</strong> — ark.cn-beijing.volces.com/api/v3/chat/completions</li>
-                            <li><strong>OpenAI</strong> — api.openai.com/v1/chat/completions</li>
-                        </ul>
-                        <h4>创作流程</h4>
-                        <ol>
-                            <li>填写基础设定 → AI 生成大纲</li>
-                            <li>大纲 → 章节细纲</li>
-                            <li>逐章生成正文（或一键全部生成）</li>
-                            <li>选中文本右键 → AI味检测 → 去AI味重写</li>
-                            <li>使用拆书分析学习写作技巧</li>
-                            <li>使用一致性检查确保前后一致</li>
-                            <li>使用读者视角审查发现弃书点</li>
-                            <li>反复打磨直到满意</li>
-                            <li>导出TXT/Markdown发布</li>
-                        </ol>
-                        <h4>快捷键</h4>
-                        <ul>
-                            <li><strong>Ctrl+S</strong> — 手动保存</li>
-                            <li><strong>Ctrl+E</strong> — 导出JSON</li>
-                            <li><strong>Ctrl+/</strong> — 聚焦AI助手</li>
-                            <li><strong>Escape</strong> — 关闭弹窗</li>
-                        </ul>
-                        <h4>新增功能</h4>
-                        <ul>
-                            <li><strong>永久记忆</strong> — 添加重要设定，每次生成时自动注入</li>
-                            <li><strong>微观控制</strong> — 选中文本后重写/扩写/缩写/改对话/加描写</li>
-                            <li><strong>章节摘要</strong> — 自动生成结构化摘要，提升连贯性</li>
-                            <li><strong>角色管理</strong> — 管理角色卡片，自动注入提示词</li>
-                            <li><strong>世界观笔记</strong> — 记录设定、规则、地名</li>
-                            <li><strong>灵感笔记</strong> — 随时记录灵感，可插入正文</li>
-                            <li><strong>拆书分析</strong> — 分析参考文本的写作技巧</li>
-                            <li><strong>一致性检查</strong> — 检查人名、地名、时间线一致性</li>
-                            <li><strong>读者视角审查</strong> — 模拟读者找出弃书点</li>
-                            <li><strong>版本历史</strong> — 自动保存版本，可回滚</li>
-                            <li><strong>写作日历</strong> — 记录写作活跃度</li>
-                            <li><strong>批量生成</strong> — 一键生成所有章节正文</li>
-                            <li><strong>导出TXT/MD</strong> — 多格式导出</li>
-                        </ul>
-                        <h4>项目文档</h4>
-                        <p>点击顶部导航栏的 <a href="/docs" target="_blank" style="color: var(--accent);">📄 文档</a> 按钮，查看完整的项目说明、架构设计和API文档。</p>
+                <!-- 使用说明 -->
+                <div class="system-subtab-content" id="subtab-help">
+                    <div class="settings-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">使用说明</h2>
+                            </div>
+                            <div class="help-content">
+                                <h4>支持的模型</h4>
+                                <p>所有 OpenAI 兼容格式均可：</p>
+                                <ul>
+                                    <li><strong>DeepSeek</strong> — api.deepseek.com/v1/chat/completions</li>
+                                    <li><strong>通义千问</strong> — dashscope.aliyuncs.com/compatible-mode/v1/chat/completions</li>
+                                    <li><strong>豆包</strong> — ark.cn-beijing.volces.com/api/v3/chat/completions</li>
+                                    <li><strong>OpenAI</strong> — api.openai.com/v1/chat/completions</li>
+                                </ul>
+
+                                <h4>v4.1 新特性</h4>
+                                <ul>
+                                    <li><strong>风格进化机制</strong> — 每章生成前读取上一章的实际风格作为标杆，写作只能越来越好，不能退步</li>
+                                    <li><strong>小说QA系统融合</strong> — 11维度质量检查：AI味、风格一致性、人设、时间线、情节逻辑、对话、伏笔、场景、情感、文风自然度、吸引力</li>
+                                    <li><strong>云辉风格融合</strong> — 提示词更自然，像朋友聊天而非专家讲课</li>
+                                    <li><strong>无限画布</strong> — 鼠标滚轮缩放，拖拽空白处平移，拖拽节点标题移动节点</li>
+                                </ul>
+
+                                <h4>核心设计理念</h4>
+                                <ul>
+                                    <li><strong>风格进化</strong>：同一项目内，每章以上一章实际风格为标杆，只能更好不能退步</li>
+                                    <li><strong>去AI味</strong>：50+禁用词、排比句检测、结构化对比检测、场景切入多样化</li>
+                                    <li><strong>一致性检查</strong>：11维度系统检查，确保人设、时间线、情节、对话前后一致</li>
+                                    <li><strong>故事圣经</strong>：每章自动生成结构化摘要，记录角色状态、伏笔埋收、情绪走向</li>
+                                </ul>
+
+                                <h4>画布操作</h4>
+                                <ul>
+                                    <li><strong>滚轮</strong> — 缩放画布（以鼠标为中心）</li>
+                                    <li><strong>拖拽空白</strong> — 平移画布</li>
+                                    <li><strong>拖拽节点标题</strong> — 移动节点位置</li>
+                                    <li><strong>点击节点标题</strong> — 弹出详情面板</li>
+                                    <li><strong>双击空白</strong> — 重置视图</li>
+                                </ul>
+
+                                <h4>创作流程</h4>
+                                <ol>
+                                    <li>填写基础设定 → AI 生成大纲</li>
+                                    <li>大纲 → 章节细纲</li>
+                                    <li>逐章生成正文（或一键全部生成）<br><small>每章生成时会自动读取上一章风格，保持一致性</small></li>
+                                    <li>选中文本右键 → AI味检测 → 去AI味重写</li>
+                                    <li>使用一致性检查确保前后一致</li>
+                                    <li>反复打磨直到满意</li>
+                                    <li>导出TXT/Markdown发布</li>
+                                </ol>
+
+                                <h4>右键菜单功能</h4>
+                                <ul>
+                                    <li><strong>大纲</strong>：AI评分、加强冲突、加因果链、修人物动机、砍废话、加暗线、砍冗余人物、加黄金三章</li>
+                                    <li><strong>章节</strong>：AI评分、加事件驱动、理因果链、砍流水账、加悬念钩子、补对话要点、加情绪曲线</li>
+                                    <li><strong>正文</strong>：AI味检测、去AI味重写、压缩精简、改对话、砍形容词、加动作写情绪、加口语感、加伏笔、改节奏、加感官描写、续写、改写风格</li>
+                                </ul>
+
+                                <h4>快捷键</h4>
+                                <ul>
+                                    <li><strong>Ctrl+S</strong> — 手动保存（含画布位置）</li>
+                                    <li><strong>Ctrl+E</strong> — 导出JSON</li>
+                                    <li><strong>Ctrl+/</strong> — 聚焦AI助手</li>
+                                    <li><strong>Escape</strong> — 关闭弹窗</li>
+                                </ul>
+
+                                <h4>项目文档</h4>
+                                <p>点击顶部导航栏的 <a href="/docs" target="_blank" style="color: var(--accent);">文档</a> 按钮，查看完整的项目说明、架构设计和API文档。</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -519,7 +652,9 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="modal-title">预览</h3>
-                <button class="btn-icon" id="modal-close">&times;</button>
+                <button class="btn-icon" id="modal-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
             <div class="modal-body" id="modal-body"></div>
             <div class="modal-footer" id="modal-footer"></div>
@@ -531,7 +666,9 @@
         <div class="modal-box modal-wide">
             <div class="modal-header">
                 <h3>提示词预览与编辑</h3>
-                <button class="btn-icon" onclick="document.getElementById('prompt-preview-modal').style.display='none'">&times;</button>
+                <button class="btn-icon" onclick="document.getElementById('prompt-preview-modal').style.display='none'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
             <div class="modal-body">
                 <p class="text-muted">以下是将要发送给 AI 的完整提示词。你可以在提交前修改。</p>
@@ -544,19 +681,6 @@
         </div>
     </div>
 
-    <!-- 思维导图模态框 -->
-    <div id="mindmap-modal" class="modal-overlay" style="display:none">
-        <div class="modal-box modal-wide">
-            <div class="modal-header">
-                <h3>思维导图</h3>
-                <button class="btn-icon" onclick="document.getElementById('mindmap-modal').style.display='none'">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="mindmap-container" style="width:100%;height:500px;border:1px solid var(--border);border-radius:8px;overflow:auto;"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast 通知 -->
     <div id="toast-container"></div>
 
@@ -565,13 +689,30 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="bookinfo-title">AI 生成书名</h3>
-                <button class="btn-icon" onclick="document.getElementById('bookinfo-modal').style.display='none'">&times;</button>
+                <button class="btn-icon" onclick="document.getElementById('bookinfo-modal').style.display='none'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
             <div class="modal-body" id="bookinfo-body"></div>
             <div class="modal-footer" id="bookinfo-footer"></div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='app.js') }}?v=2.1.0"></script>
+    <!-- 新建元素模态框 (剧情/角色/设定) -->
+    <div id="new-element-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="new-elem-title">新建元素</h3>
+                <button class="btn-icon" onclick="document.getElementById('new-element-modal').style.display='none'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="new-elem-body"></div>
+            <div class="modal-footer" id="new-elem-footer"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='canvas-engine.js') }}?v=4.0.0"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=4.0.0"></script>
 </body>
 </html>

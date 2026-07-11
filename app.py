@@ -1,7 +1,7 @@
 """
 Kealin AI Novels — 超级进化版
 一个基于大模型的智能小说创作工具
-55轮迭代优化，全面增强
+60轮迭代优化，全面增强
 """
 
 from flask import Flask, request, Response, render_template, jsonify
@@ -13,6 +13,13 @@ import time
 from dotenv import load_dotenv
 
 # Import enhanced modules
+from modules.config import (
+    APP_VERSION, APP_NAME, APP_SUBTITLE,
+    BANNED_WORDS, AI_TRANSITION_WORDS, AI_WORD_MAPPINGS,
+    DEFAULT_HOST, DEFAULT_PORT, DEFAULT_DEBUG,
+)
+from modules.auth import require_auth, get_api_secret, AUTH_ENABLED
+from modules.database import init_db, save_project_state, save_chapter
 from modules.memory import (
     HierarchicalMemory, ChapterSummary, parse_summary_text,
     build_auto_summary_prompt, build_fact_extraction_prompt,
@@ -37,13 +44,24 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 开发模式下禁用静态文件缓存
+# 开发模式下禁用静态文件缓存（Fix #11: 静态配置接口允许缓存）
 @app.after_request
 def add_header(response):
+    # 静态配置接口允许缓存（永不变化）
+    if request.path == '/api/anti-ai/config':
+        return response
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+
+# Fix #12: 全局异常处理器
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """全局异常处理器"""
+    logger.error(f"未捕获的异常: {e}", exc_info=True)
+    return jsonify({"error": str(e)}), 500
 
 # 启动时间（用于健康检查）
 START_TIME = time.time()
@@ -189,34 +207,49 @@ def docs():
 
 
 @app.route("/gen", methods=["POST"])
+@require_auth
 def generate():
     """主生成接口 - 用于大纲、章节、正文"""
     data = request.json
+    if not data:
+        return Response("错误: 无效的请求体", status=400)
+
     prompt = data.get("prompt", "")
     if not prompt:
         return Response("错误: 空提示词", status=400)
+
+    # Input validation: limit prompt size
+    if len(prompt) > 200000:
+        return Response("错误: 提示词过长（超过200000字符）", status=400)
 
     logger.info(f"收到生成请求，prompt长度: {len(prompt)}")
     logger.info(f"使用模型: {CONFIG['primary']['model']}, endpoint: {CONFIG['primary']['api_endpoint']}")
 
     return Response(
         call_model(prompt, "primary"),
-        mimetype="text/plain",
+        mimetype="text/event-stream",
         headers={"X-Accel-Buffering": "no"},
     )
 
 
 @app.route("/gen2", methods=["POST"])
+@require_auth
 def generate2():
     """辅助生成接口 - 用于AI迭代优化"""
     data = request.json
+    if not data:
+        return Response("错误: 无效的请求体", status=400)
+
     prompt = data.get("prompt", "")
     if not prompt:
         return Response("错误: 空提示词", status=400)
 
+    if len(prompt) > 200000:
+        return Response("错误: 提示词过长（超过200000字符）", status=400)
+
     return Response(
         call_model(prompt, "secondary"),
-        mimetype="text/plain",
+        mimetype="text/event-stream",
         headers={"X-Accel-Buffering": "no"},
     )
 
@@ -238,9 +271,13 @@ def get_config():
 
 
 @app.route("/api/config", methods=["POST"])
+@require_auth
 def update_config():
     """运行时更新模型配置"""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     model_key = data.get("model_key", "primary")
     if model_key not in CONFIG:
         return jsonify({"error": "无效的模型键"}), 400
@@ -288,8 +325,53 @@ def health_check():
                 "endpoint": CONFIG["secondary"]["api_endpoint"],
             }
         },
-        "version": "2.1.0"
+        "version": APP_VERSION,
+        "auth_enabled": AUTH_ENABLED,
     })
+
+
+# ============================================================
+# Unified Anti-AI Config Endpoint (single source of truth)
+# ============================================================
+
+@app.route("/api/anti-ai/config", methods=["GET"])
+def get_anti_ai_config():
+    """Return the unified anti-AI configuration.
+    Frontend should call this on startup to sync banned words and mappings.
+    """
+    response = jsonify({
+        "banned_words": BANNED_WORDS,
+        "ai_transition_words": AI_TRANSITION_WORDS,
+        "ai_word_mappings": AI_WORD_MAPPINGS,
+    })
+    # Fix #11: 静态配置永不变化，允许浏览器缓存24小时
+    response.headers['Cache-Control'] = 'public, max-age=86400'
+    return response
+
+
+# ============================================================
+# Database Sync Endpoints (optional, requires ENABLE_DATABASE=true)
+# ============================================================
+
+@app.route("/api/db/sync", methods=["POST"])
+@require_auth
+def db_sync():
+    """Sync project state from frontend to database."""
+    data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
+    project_id = data.get("project_id", "default")
+    state = data.get("state", {})
+    save_project_state(project_id, state)
+
+    # Also save individual chapters
+    chapters = state.get("chapters", [])
+    for i, ch in enumerate(chapters):
+        if ch and isinstance(ch, dict):
+            save_chapter(project_id, i, ch)
+
+    return jsonify({"ok": True, "project_id": project_id})
 
 
 # ============================================================
@@ -298,12 +380,15 @@ def health_check():
 
 
 @app.route("/api/memory/summary", methods=["POST"])
+@require_auth
 def api_auto_summary():
     """Generate a structured chapter summary using the memory system."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     chapter_content = data.get("content", "")
     chapter_outline = data.get("outline", "")
-    chapter_idx = data.get("chapter_idx", -1)
 
     if not chapter_content:
         return jsonify({"error": "内容不能为空"}), 400
@@ -315,15 +400,19 @@ def api_auto_summary():
 
     return Response(
         generate(),
-        mimetype="text/plain",
+        mimetype="text/event-stream",
         headers={"X-Accel-Buffering": "no"},
     )
 
 
 @app.route("/api/memory/extract-facts", methods=["POST"])
+@require_auth
 def api_extract_facts():
     """Extract key facts from chapter content for semantic memory."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     chapter_content = data.get("content", "")
 
     if not chapter_content:
@@ -336,15 +425,19 @@ def api_extract_facts():
 
     return Response(
         generate(),
-        mimetype="text/plain",
+        mimetype="text/event-stream",
         headers={"X-Accel-Buffering": "no"},
     )
 
 
 @app.route("/api/memory/search", methods=["POST"])
+@require_auth
 def api_memory_search():
     """Search memories using semantic index."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     memories_data = data.get("memories", {})
     query = data.get("query", "")
     top_k = data.get("top_k", 10)
@@ -367,9 +460,13 @@ def api_memory_search():
 
 
 @app.route("/api/scene/plan", methods=["POST"])
+@require_auth
 def api_scene_plan():
     """Generate a detailed scene plan for a chapter."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     chapter_outline = data.get("outline", "")
     characters = data.get("characters", "")
     style = data.get("style", "")
@@ -387,15 +484,19 @@ def api_scene_plan():
 
     return Response(
         generate(),
-        mimetype="text/plain",
+        mimetype="text/event-stream",
         headers={"X-Accel-Buffering": "no"},
     )
 
 
 @app.route("/api/scene/analyze-pacing", methods=["POST"])
+@require_auth
 def api_analyze_pacing():
     """Analyze the pacing of a text passage."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     text = data.get("text", "")
 
     if not text:
@@ -410,9 +511,13 @@ def api_analyze_pacing():
 
 
 @app.route("/api/character/card", methods=["POST"])
+@require_auth
 def api_character_card():
     """Convert simple character data to structured card or generate from text."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     mode = data.get("mode", "convert")  # convert, generate, check
 
     if mode == "convert":
@@ -471,7 +576,7 @@ def api_character_card():
 
         return Response(
             generate(),
-            mimetype="text/plain",
+            mimetype="text/event-stream",
             headers={"X-Accel-Buffering": "no"},
         )
 
@@ -491,7 +596,7 @@ def api_character_card():
 
         return Response(
             generate(),
-            mimetype="text/plain",
+            mimetype="text/event-stream",
             headers={"X-Accel-Buffering": "no"},
         )
 
@@ -499,9 +604,13 @@ def api_character_card():
 
 
 @app.route("/api/quality/check", methods=["POST"])
+@require_auth
 def api_quality_check():
     """Run quality analysis on text."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     text = data.get("text", "")
     check_type = data.get("check_type", "local")  # local, ai
 
@@ -523,7 +632,7 @@ def api_quality_check():
 
         return Response(
             generate(),
-            mimetype="text/plain",
+            mimetype="text/event-stream",
             headers={"X-Accel-Buffering": "no"},
         )
 
@@ -531,9 +640,13 @@ def api_quality_check():
 
 
 @app.route("/api/quality/batch", methods=["POST"])
+@require_auth
 def api_quality_batch():
     """Run quality analysis on multiple chapters."""
     data = request.json
+    if not data:
+        return jsonify({"error": "无效的请求体"}), 400
+
     chapters = data.get("chapters", [])  # List of chapter texts
 
     if not chapters:
@@ -573,12 +686,19 @@ def api_quality_batch():
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 20000))
-    host = os.getenv("HOST", "0.0.0.0")
-    debug = os.getenv("DEBUG", "true").lower() == "true"
+    port = int(os.getenv("PORT", DEFAULT_PORT))
+    host = os.getenv("HOST", DEFAULT_HOST)
+    debug = os.getenv("DEBUG", str(DEFAULT_DEBUG)).lower() == "true"
+
+    # Initialize database if enabled
+    init_db()
+
     print(f"\n{'='*50}")
-    print(f"  Kealin AI Novels 超级进化版 v2.1")
+    print(f"  {APP_NAME} {APP_SUBTITLE} v{APP_VERSION}")
     print(f"  访问地址: http://localhost:{port}")
     print(f"  健康检查: http://localhost:{port}/api/health")
+    print(f"  认证模式: {'已启用' if AUTH_ENABLED else '已禁用（本地开发）'}")
+    if not AUTH_ENABLED:
+        print(f"  Dev Token: {get_api_secret()[:16]}...")
     print(f"{'='*50}\n")
     app.run(debug=debug, port=port, host=host)

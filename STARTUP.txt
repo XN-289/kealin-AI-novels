@@ -1,4 +1,4 @@
-Kealin AI Novels - Quick Start Guide
+Kealin AI Novels v3.0.0 - Quick Start Guide
 ======================================
 
 RECOMMENDED: Create Desktop Shortcut
@@ -35,6 +35,16 @@ A: Edit .env file:
    PRIMARY_API_ENDPOINT=API_URL
    PRIMARY_API_KEY=your_key
    PRIMARY_MODEL=model_name
+
+
+New in v3.0.0
+--------------------------------------
+- API Authentication: Optional Bearer token auth (set API_SECRET_KEY in .env)
+- Database Persistence: Optional SQLite backup (set ENABLE_DATABASE=true in .env)
+- Unified Version: Single version source across all files
+- Fixed Chinese regex for proper Unicode range
+- Improved code architecture (no more monkey-patching)
+- Default HOST changed to 127.0.0.1 (localhost only, safer)
 
 
 Supported Models

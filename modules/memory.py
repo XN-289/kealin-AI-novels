@@ -125,7 +125,7 @@ class SemanticIndex:
         """Simple Chinese tokenization using character bigrams + word boundaries."""
         text = text.lower().strip()
         # Extract Chinese character bigrams
-        chars = re.findall(r'[一-鿿]', text)
+        chars = re.findall(r'[一-龥]', text)
         bigrams = [chars[i] + chars[i + 1] for i in range(len(chars) - 1)]
         # Also keep individual characters for single-char important words
         unigrams = chars
@@ -152,22 +152,37 @@ class SemanticIndex:
 
     def search(self, query: str, top_k: int = 10,
                entry_types: List[str] = None,
-               min_importance: int = 1) -> List[Tuple[MemoryEntry, float]]:
-        """Search for relevant memories using keyword matching."""
+               min_importance: int = 1,
+               recency_weight: float = 0.2,
+               importance_weight: float = 0.3,
+               relevance_weight: float = 0.5) -> List[Tuple[MemoryEntry, float]]:
+        """Enhanced semantic search with multi-factor scoring.
+
+        Combines keyword relevance, recency (decay factor), and importance
+        into a single score. Inspired by LangChain's hybrid retrieval strategy.
+
+        score = relevance_weight * normalized_relevance
+              + recency_weight * decay_factor
+              + importance_weight * importance/10
+        """
         query_tokens = self._tokenize(query)
         if not query_tokens:
             return []
 
-        scores: Dict[str, float] = {}
+        # Calculate raw keyword match scores
+        raw_scores: Dict[str, float] = {}
         for token in query_tokens:
             if token in self._index:
                 for entry_id, weight in self._index[token]:
-                    if entry_id not in scores:
-                        scores[entry_id] = 0.0
-                    scores[entry_id] += weight
+                    if entry_id not in raw_scores:
+                        raw_scores[entry_id] = 0.0
+                    raw_scores[entry_id] += weight
+
+        # Normalize relevance to [0, 1]
+        max_raw = max(raw_scores.values()) if raw_scores else 1.0
 
         results = []
-        for entry_id, score in sorted(scores.items(), key=lambda x: -x[1]):
+        for entry_id, raw_score in raw_scores.items():
             entry = self._entries.get(entry_id)
             if not entry:
                 continue
@@ -175,10 +190,22 @@ class SemanticIndex:
                 continue
             if entry.importance < min_importance:
                 continue
+
+            normalized_relevance = raw_score / max_raw if max_raw > 0 else 0.0
+            recency_score = entry.decay_factor
+            importance_score = entry.importance / 10.0
+
+            final_score = (
+                relevance_weight * normalized_relevance
+                + recency_weight * recency_score
+                + importance_weight * importance_score
+            )
+
             entry.access_count += 1
             entry.last_accessed = datetime.now().isoformat()
-            results.append((entry, score))
+            results.append((entry, final_score))
 
+        results.sort(key=lambda x: -x[1])
         return results[:top_k]
 
     def to_dict(self) -> dict:
@@ -368,6 +395,91 @@ class HierarchicalMemory:
                 parts.append(sem)
 
         return "\n\n".join(parts)
+
+    # -- Auto Consolidation & Stats --
+
+    def auto_consolidate(self, consolidator: "MemoryConsolidator" = None) -> Optional[dict]:
+        """Auto-check and consolidate memory if entries exceed threshold.
+
+        Returns:
+            Consolidation stats dict, or None if not triggered.
+        """
+        if consolidator is None:
+            consolidator = MemoryConsolidator()
+
+        if not consolidator.should_consolidate(self):
+            return None
+
+        return consolidator.consolidate(self)
+
+    def get_memory_stats(self) -> dict:
+        """Return memory system statistics.
+
+        Returns:
+            Dict with: total_entries, type_distribution, avg_importance,
+            estimated_tokens, chapter_count, permanent_count.
+        """
+        entries = list(self.semantic_index._entries.values())
+        total = len(entries)
+
+        type_dist: Dict[str, int] = {}
+        for entry in entries:
+            type_dist[entry.entry_type] = type_dist.get(entry.entry_type, 0) + 1
+
+        avg_imp = sum(e.importance for e in entries) / total if total > 0 else 0.0
+
+        all_text = " ".join(e.content for e in entries)
+        all_text += " ".join(self.permanent_memories)
+        for summary in self.chapter_summaries.values():
+            all_text += summary.narrative or ""
+        estimated_tokens = TokenEstimator.estimate_tokens(all_text)
+
+        return {
+            "total_entries": total,
+            "type_distribution": type_dist,
+            "avg_importance": round(avg_imp, 2),
+            "estimated_tokens": estimated_tokens,
+            "chapter_count": len(self.chapter_summaries),
+            "permanent_count": len(self.permanent_memories),
+        }
+
+    def compress_context(self, text: str, max_tokens: int = 8000) -> str:
+        """Compress context text to fit within token budget.
+
+        Strategy: Keep paragraphs from the tail (most recent/important),
+        truncate from the front if needed.
+
+        Args:
+            text: Context text to compress
+            max_tokens: Target token上限
+
+        Returns:
+            Compressed text
+        """
+        current_tokens = TokenEstimator.estimate_tokens(text)
+        if current_tokens <= max_tokens:
+            return text
+
+        paragraphs = re.split(r'\n\n+', text)
+        if not paragraphs:
+            return text
+
+        result_parts = []
+        token_budget = max_tokens
+
+        for para in reversed(paragraphs):
+            para_tokens = TokenEstimator.estimate_tokens(para)
+            if para_tokens <= token_budget:
+                result_parts.insert(0, para)
+                token_budget -= para_tokens
+            else:
+                if not result_parts:
+                    ratio = max_tokens / para_tokens if para_tokens > 0 else 1.0
+                    truncated_len = max(100, int(len(para) * ratio))
+                    result_parts.insert(0, para[:truncated_len] + "……（已压缩）")
+                break
+
+        return "\n\n".join(result_parts)
 
     # -- Serialization --
 
@@ -614,7 +726,7 @@ class MemoryConsolidator:
         使用 bigram 作为特征单位，计算两个条目内容的重叠比例。
         """
         def _get_bigrams(text: str) -> set:
-            chars = re.findall(r'[一-鿿]', text.lower())
+            chars = re.findall(r'[一-龥]', text.lower())
             if len(chars) < 2:
                 return set(chars) if chars else set()
             bigrams = {chars[i] + chars[i + 1] for i in range(len(chars) - 1)}
@@ -664,7 +776,7 @@ class TokenEstimator:
             return 0
 
         # 统计中文字符数
-        cn_chars = len(re.findall(r'[一-鿿]', text))
+        cn_chars = len(re.findall(r'[一-龥]', text))
         # 统计英文单词数
         en_words = len(re.findall(r'[a-zA-Z]+', text))
         # 其他字符（标点、数字、空格等）
@@ -718,274 +830,15 @@ class TokenEstimator:
         return current_tokens > max_tokens
 
 
-# ============================================================
-#  SemanticIndex.search() 增强 — 借鉴 LangChain 的混合检索策略
-# ============================================================
-
-# 保存原始 search 方法的引用，供增强版内部调用
-_original_search = SemanticIndex.search
+# (Enhanced search is now built into SemanticIndex.search directly — no monkey-patching needed)
 
 
-def _enhanced_search(self, query: str, top_k: int = 10,
-                     entry_types: List[str] = None,
-                     min_importance: int = 1,
-                     recency_weight: float = 0.2,
-                     importance_weight: float = 0.3,
-                     relevance_weight: float = 0.5) -> List[Tuple[MemoryEntry, float]]:
-    """增强版语义搜索，借鉴 LangChain 的多因子综合评分策略。
-
-    综合评分 = relevance_weight * 关键词匹配分
-             + recency_weight * 衰减因子
-             + importance_weight * 重要度/10
-
-    Args:
-        query: 搜索查询文本
-        top_k: 返回结果数量
-        entry_types: 过滤的条目类型列表
-        min_importance: 最低重要度过滤
-        recency_weight: 时间衰减权重（默认 0.2）
-        importance_weight: 重要度权重（默认 0.3）
-        relevance_weight: 相关性权重（默认 0.5）
-
-    Returns:
-        [(MemoryEntry, 综合评分), ...] 按评分降序排列
-    """
-    query_tokens = self._tokenize(query)
-    if not query_tokens:
-        return []
-
-    # 计算原始关键词匹配分（归一化）
-    raw_scores: Dict[str, float] = {}
-    for token in query_tokens:
-        if token in self._index:
-            for entry_id, weight in self._index[token]:
-                if entry_id not in raw_scores:
-                    raw_scores[entry_id] = 0.0
-                raw_scores[entry_id] += weight
-
-    # 归一化相关性分数到 [0, 1]
-    max_raw = max(raw_scores.values()) if raw_scores else 1.0
-
-    results = []
-    for entry_id, raw_score in raw_scores.items():
-        entry = self._entries.get(entry_id)
-        if not entry:
-            continue
-        if entry_types and entry.entry_type not in entry_types:
-            continue
-        if entry.importance < min_importance:
-            continue
-
-        # 归一化相关性分数
-        normalized_relevance = raw_score / max_raw if max_raw > 0 else 0.0
-        # 衰减因子（作为时间新鲜度）
-        recency_score = entry.decay_factor
-        # 重要度归一化
-        importance_score = entry.importance / 10.0
-
-        # 综合评分
-        final_score = (
-            relevance_weight * normalized_relevance
-            + recency_weight * recency_score
-            + importance_weight * importance_score
-        )
-
-        entry.access_count += 1
-        entry.last_accessed = datetime.now().isoformat()
-        results.append((entry, final_score))
-
-    results.sort(key=lambda x: -x[1])
-    return results[:top_k]
-
-
-# 替换 SemanticIndex.search 为增强版
-SemanticIndex.search = _enhanced_search
+# (Enhanced methods auto_consolidate, get_memory_stats, compress_context are now
+#  directly defined in HierarchicalMemory class — no monkey-patching needed)
 
 
 # ============================================================
-#  HierarchicalMemory 增强方法 — 自动整合与统计
+#  build_consistency_check_prompt — 已废弃
+#  原函数从未被任何端点调用（死代码）
+#  一致性检查已由 character.py 的 build_character_consistency_prompt 替代
 # ============================================================
-
-def _auto_consolidate(self, consolidator: "MemoryConsolidator" = None) -> Optional[dict]:
-    """自动检查并整合记忆。
-
-    Args:
-        consolidator: 记忆整合器实例，为 None 时使用默认参数创建
-
-    Returns:
-        整合统计信息 dict，如果未触发整合则返回 None
-    """
-    if consolidator is None:
-        consolidator = MemoryConsolidator()
-
-    if not consolidator.should_consolidate(self):
-        return None
-
-    return consolidator.consolidate(self)
-
-
-def _get_memory_stats(self) -> dict:
-    """返回记忆系统的统计信息。
-
-    Returns:
-        包含以下字段的 dict:
-        - total_entries: 语义索引中的总条目数
-        - type_distribution: 各类型条目的数量分布
-        - avg_importance: 平均重要度
-        - estimated_tokens: 估算的 token 总数
-        - chapter_count: 章节数量
-        - permanent_count: 永久记忆条数
-    """
-    entries = list(self.semantic_index._entries.values())
-    total = len(entries)
-
-    # 类型分布
-    type_dist: Dict[str, int] = {}
-    for entry in entries:
-        type_dist[entry.entry_type] = type_dist.get(entry.entry_type, 0) + 1
-
-    # 平均重要度
-    avg_imp = sum(e.importance for e in entries) / total if total > 0 else 0.0
-
-    # 估算 token 数
-    all_text = " ".join(e.content for e in entries)
-    all_text += " ".join(self.permanent_memories)
-    for summary in self.chapter_summaries.values():
-        all_text += summary.narrative or ""
-    estimated_tokens = TokenEstimator.estimate_tokens(all_text)
-
-    return {
-        "total_entries": total,
-        "type_distribution": type_dist,
-        "avg_importance": round(avg_imp, 2),
-        "estimated_tokens": estimated_tokens,
-        "chapter_count": len(self.chapter_summaries),
-        "permanent_count": len(self.permanent_memories),
-    }
-
-
-def _compress_context(self, text: str, max_tokens: int = 8000) -> str:
-    """压缩上下文文本到指定 token 数内。
-
-    策略：
-    1. 如果文本已在限制内，直接返回
-    2. 按段落分割，按重要性（段落长度和位置）排序
-    3. 从尾部（通常是最新的/最重要的）开始保留，逐段添加直到达到限制
-
-    Args:
-        text: 待压缩的上下文文本
-        max_tokens: 目标 token 上限
-
-    Returns:
-        压缩后的文本
-    """
-    current_tokens = TokenEstimator.estimate_tokens(text)
-    if current_tokens <= max_tokens:
-        return text
-
-    # 按段落分割（以双换行为界）
-    paragraphs = re.split(r'\n\n+', text)
-    if not paragraphs:
-        return text
-
-    # 从后往前保留段落（尾部通常包含最新/最重要的信息）
-    result_parts = []
-    token_budget = max_tokens
-
-    for para in reversed(paragraphs):
-        para_tokens = TokenEstimator.estimate_tokens(para)
-        if para_tokens <= token_budget:
-            result_parts.insert(0, para)
-            token_budget -= para_tokens
-        else:
-            # 如果单个段落就超出预算，尝试截断
-            if not result_parts:
-                # 强制保留前 max_tokens 对应的文本
-                ratio = max_tokens / para_tokens if para_tokens > 0 else 1.0
-                truncated_len = max(100, int(len(para) * ratio))
-                result_parts.insert(0, para[:truncated_len] + "……（已压缩）")
-            break
-
-    return "\n\n".join(result_parts)
-
-
-# 将增强方法绑定到 HierarchicalMemory
-HierarchicalMemory.auto_consolidate = _auto_consolidate
-HierarchicalMemory.get_memory_stats = _get_memory_stats
-HierarchicalMemory.compress_context = _compress_context
-
-
-# ============================================================
-#  build_consistency_check_prompt — 借鉴 Novelcrafter 的一致性检查
-# ============================================================
-
-def build_consistency_check_prompt(chapter_content: str,
-                                   characters: List[Dict[str, str]] = None,
-                                   previous_summaries: List[str] = None) -> str:
-    """构建一致性检查 prompt，借鉴 Novelcrafter 的一致性校验思路。
-
-    要求 LLM 检查角色性格一致性、设定冲突、时间线矛盾等问题，
-    返回结构化的问题清单。
-
-    Args:
-        chapter_content: 当前章节的完整内容
-        characters: 角色设定列表，每项为 dict，至少包含 name 和 description
-                    例如: [{"name": "林默", "description": "性格内向，擅长编程"}]
-        previous_summaries: 前文章节的摘要列表，按章节顺序排列
-
-    Returns:
-        一致性检查的 prompt 文本
-    """
-    # 构建角色设定信息
-    char_section = ""
-    if characters:
-        char_lines = []
-        for c in characters:
-            name = c.get("name", "未知")
-            desc = c.get("description", "无描述")
-            char_lines.append(f"- {name}：{desc}")
-        char_section = "\n".join(char_lines)
-    else:
-        char_section = "（未提供角色设定，请根据内容自行判断）"
-
-    # 构建前文摘要信息
-    summary_section = ""
-    if previous_summaries:
-        summary_section = "\n\n".join(
-            f"第{i+1}章：{s}" for i, s in enumerate(previous_summaries)
-        )
-    else:
-        summary_section = "（无前文摘要）"
-
-    return f"""你是一个专业的小说编辑，擅长发现文稿中的逻辑问题和一致性错误。
-请仔细检查以下章节内容，找出可能存在的问题。
-
-【角色设定】
-{char_section}
-
-【前文摘要】
-{summary_section}
-
-【当前章节内容】
-{chapter_content}
-
-【检查要求】
-请从以下几个维度逐一检查，并输出结构化的问题清单：
-
-1. **角色性格一致性**：角色的言行是否符合其设定的性格特征？是否存在前后矛盾的行为？
-2. **设定冲突**：本章内容是否与已有设定（世界观、能力体系、人物关系等）产生冲突？
-3. **时间线矛盾**：事件的时间顺序是否合理？是否存在时间线上的逻辑错误？
-4. **细节一致性**：地名、物品、称呼等细节是否与前文一致？
-5. **伏笔回收**：前文埋下的伏笔是否被遗忘或矛盾地处理？
-
-【输出格式】
-对发现的每个问题，请按以下格式输出：
-
-【问题类型】（角色一致性/设定冲突/时间线/细节/伏笔）
-【严重程度】（高/中/低）
-【具体位置】指出问题出现在哪一段或哪句话
-【问题描述】具体说明什么问题
-【修改建议】给出修改方向
-
-如果未发现任何问题，请输出：
-【检查结果】未发现一致性问题，章节内容与已有设定和前文保持一致。"""

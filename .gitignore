@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 .env
+.env.local
+.env.production
 .venv/
 venv/
 *.egg-info/
@@ -9,3 +11,10 @@ build/
 .DS_Store
 Thumbs.db
 *.log
+*.db
+*.sqlite
+*.sqlite3
+.vscode/
+.idea/
+*.swp
+*.swo

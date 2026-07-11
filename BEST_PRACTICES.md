@@ -6,6 +6,8 @@
 
 ## 一、AI记忆问题的解决方案
 
+> **研究状态**：已完成全部核心方案研究，均已实现
+
 ### 1. 分层记忆架构（MemGPT/Letta方案）
 
 **核心思想**：模拟操作系统分页机制，将记忆分为三层
@@ -33,6 +35,8 @@
 - 生成新章节时，自动检索相关摘要注入上下文
 - 使用向量数据库（如FAISS/ChromaDB）实现语义检索
 
+**实现状态**：已实现（v2.1.0+），见 `modules/memory.py` - HierarchicalMemory 类。暂未使用向量数据库，采用字符 bigram + Jaccard 相似度的轻量方案。
+
 ### 2. 关键词触发式记忆注入（SillyTavern方案）
 
 **核心思想**：当上下文中出现特定关键词时，自动注入对应的世界设定
@@ -54,6 +58,8 @@ const worldInfo = {
 **可借鉴点**：
 - 比全量注入更高效，节省token
 - 适合世界观设定、角色背景等按需触发的内容
+
+**实现状态**：已实现（v2.2.0），深度借鉴 SillyTavern World Info，支持保底条目、次级关键词逻辑、正则匹配、互斥组、触发概率等完整特性。
 
 ### 3. 角色卡系统（SillyTavern方案）
 
@@ -82,9 +88,13 @@ const worldInfo = {
 - `speech_style` 和 `example_dialogue` 比抽象描述更有效
 - `current_state` 追踪角色当前状态，防止前后矛盾
 
+**实现状态**：已实现（v2.3.0），完整结构化角色卡系统，见 `modules/character.py` - CharacterCard 类。扩展了 VoiceProfile、CharacterRelationship、CharacterArc、dialogue_rules、behavioral_rules 等高级字段。
+
 ---
 
 ## 二、AI写作风格控制
+
+> **研究状态**：已完成全部核心方案研究，均已实现
 
 ### 4. 风格锚定技术（Few-shot Style Anchoring）
 
@@ -124,6 +134,8 @@ const worldInfo = {
 - 单次生成难以同时兼顾所有要求，分阶段效果更好
 - 每个阶段可以用不同的温度参数
 
+**实现状态**：已实现（v2.2.0），四阶段流水线：风格改写 → 去模板化 → 人味注入 → 最终润色，每个阶段可独立开关。
+
 ### 6. 反AI味词汇库
 
 **AI高频词映射表**：
@@ -148,6 +160,8 @@ const worldInfo = {
 ---
 
 ## 三、AI内容输出的微观控制
+
+> **研究状态**：已完成核心方案研究，均已实现
 
 ### 7. 段落级重新生成策略
 
@@ -181,6 +195,8 @@ ${style}
 - 重写时需要提供前后文上下文，确保连贯
 - 可以指定不同的重写风格（更简洁/更详细/更口语化等）
 
+**实现状态**：已实现（v2.1.0），右键菜单支持选中文本的重写、扩写、缩写、改对话、加描写等操作。
+
 ### 8. 场景级控制（Novelcrafter方案）
 
 **核心思想**：场景是AI小说写作的最佳控制粒度
@@ -196,9 +212,13 @@ ${style}
 - 比章节更细、比段落更有语义完整性
 - 可以为不同场景设置不同的生成参数
 
+**实现状态**：已实现（v2.3.0），见 `modules/scene.py` - SceneInfo、ChapterScenePlan 类，以及前端 sceneConfig 配置面板。
+
 ---
 
 ## 四、结构化方法
+
+> **研究状态**：大纲驱动已实现，多Agent流水线为待研究方向
 
 ### 9. 多层级大纲驱动
 
@@ -321,3 +341,89 @@ ${style}
     - **build_fact_extraction_prompt()**：从章节内容中提取关键事实的专用 prompt
     - **四类事实**：人物事实、设定事实、剧情事实、伏笔事实
     - **自动存入语义索引**：提取的事实自动存入长期记忆库
+14. **写作质量分析引擎（借鉴 Sudowrite）** ✅ 已实现（v2.3.0）
+    - **QualityReport 四维度评分**：AI味分数、可读性、风格一致性、吸引力
+    - **本地 AI 味检测**：40+ 禁用词、AI过渡词、排比句、段尾抒情、"的"字密度、句长均匀度
+    - **跨章风格一致性分析**：比较多章的句长、"的"字密度、对话密度差异
+    - **批量质量检查**：一键分析全部章节并汇总统计
+    - **结构化问题清单**：按严重程度分级，附修改建议
+    - **实现位置**：`modules/quality.py` - QualityReport, generate_quality_report()
+15. **场景级节奏分析** ✅ 已实现（v2.3.0）
+    - **analyze_pacing()**：分析文本节奏（1-5级），检测句子长度均匀度
+    - **detect_scene_breaks()**：自动检测场景切换点（显式标记 + 时间/地点跳跃）
+    - **SceneInfo 结构化元数据**：场景类型（9种）、情绪节拍（10种）、节奏等级（5级）
+    - **ChapterScenePlan**：完整场景方案，含场景转换描述和情绪曲线
+    - **实现位置**：`modules/scene.py`
+16. **深度结构化角色卡（扩展 SillyTavern）** ✅ 已实现（v2.3.0）
+    - **VoiceProfile**：speech_style、vocabulary_level、catchphrases、verbal_tics、emotional_speech、forbidden_words
+    - **CharacterRelationship**：target_name、relationship_type、intensity、history、current_tension、future_trajectory
+    - **CharacterArc**：starting_state → current_state → target_state，含 key_moments 和成长阶段
+    - **CharacterTrait**：name、intensity、is_flaw、growth_potential，带 evidence 追踪
+    - **角色一致性检查**：check_name_consistency()、check_voice_consistency()
+    - **实现位置**：`modules/character.py` - CharacterCard, CharacterCardManager
+17. **多模型支持与运行时切换** ✅ 已实现（v2.0.0+）
+    - **主模型 + 辅助模型**双通道：高质量生成用主模型，辅助操作用低成本模型
+    - **运行时热切换**：通过 /api/config 接口随时更新模型配置
+    - **健康检查**：/api/health 端点返回服务状态、模型配置、运行时间
+    - **实现位置**：`app.py` - CONFIG, /api/config, /api/health
+
+---
+
+## 七、待研究改进方向
+
+> 基于现有最佳实践和项目现状，以下是值得深入研究的改进方向
+
+### 高优先级
+
+| # | 改进方向 | 参考来源 | 预期收益 | 状态 |
+|---|---------|---------|---------|------|
+| 1 | **向量嵌入语义检索** | LangChain、mem0 | 替换当前 bigram Jaccard 方案，提升语义匹配精度 | 待研究 |
+| 2 | **多Agent协作写作流水线** | AutoGen、CrewAI | 写作Agent + 审查Agent + 改写Agent 分工协作 | 待研究 |
+| 3 | **知识图谱式世界观管理** | LangChain KG | 将角色关系、势力关系、事件因果构建为知识图谱 | 待研究 |
+| 4 | **长篇小说全局一致性追踪** | Novelcrafter | 跨卷级的伏笔追踪、角色弧线监控、时间线管理 | 待研究 |
+
+### 中优先级
+
+| # | 改进方向 | 参考来源 | 预期收益 | 状态 |
+|---|---------|---------|---------|------|
+| 5 | **RAG增强的世界设定检索** | LangChain RAG | 将世界观设定文档切片索引，按上下文精准检索 | 待研究 |
+| 6 | **写作风格指纹学习** | Sudowrite | 从用户提供的参考文本中学习独特的句式、用词、节奏模式 | 待研究 |
+| 7 | **章节间因果链验证** | Novelcrafter | 自动检测前后章节事件的因果逻辑是否成立 | 待研究 |
+| 8 | **读者情绪曲线预测** | Sudowrite | 模拟读者视角，预测每段文字引发的情绪反应 | 待研究 |
+| 9 | **对话方言/口音系统** | SillyTavern | 为不同角色设置方言或口音标记，自动生成差异化对话 | 待研究 |
+
+### 低优先级（探索性）
+
+| # | 改进方向 | 参考来源 | 预期收益 | 状态 |
+|---|---------|---------|---------|------|
+| 10 | **FAISS/ChromaDB 本地向量库集成** | MemGPT | 替换内存索引，支持百万级记忆条目 | 待研究 |
+| 11 | **多语言写作支持** | Sudowrite | 支持英文、日文等多语言小说创作 | 待研究 |
+| 12 | **自动插图提示词生成** | 自研 | 根据场景描述自动生成配图提示词 | 待研究 |
+| 13 | **WebDAV/云端同步** | 自研 | 跨设备项目同步，避免数据丢失 | 待研究 |
+
+---
+
+## 八、研究完成记录
+
+> 已完成研究并实现的最佳实践项目清单
+
+| # | 研究项 | 研究来源 | 实现版本 | 实现位置 |
+|---|-------|---------|---------|---------|
+| 1 | 分层记忆架构 | MemGPT/Letta | v2.1.0 | `modules/memory.py` - HierarchicalMemory |
+| 2 | 关键词触发式记忆注入 | SillyTavern World Info | v2.2.0 | `static/app.js` - World Info |
+| 3 | 结构化角色卡系统 | SillyTavern Character Card | v2.3.0 | `modules/character.py` - CharacterCard |
+| 4 | 风格锚定技术 | Few-shot Style Anchoring | v2.0.0+ | `static/app.js` - 风格模仿 |
+| 5 | 多阶段去AI味流水线 | Sudowrite | v2.2.0 | `static/app.js` - 去AI味流水线 |
+| 6 | 反AI味词汇库 | 自研 | v2.0.0+ | `modules/quality.py` - BANNED_WORDS |
+| 7 | 段落级重新生成策略 | Novelcrafter | v2.1.0 | `static/app.js` - 微观控制 |
+| 8 | 场景级控制 | Novelcrafter | v2.3.0 | `modules/scene.py` - SceneInfo |
+| 9 | 多层级大纲驱动 | Novelcrafter | v2.0.0+ | `static/app.js` - 大纲系统 |
+| 10 | 记忆自动整合 | mem0 | v2.3.0 | `modules/memory.py` - MemoryConsolidator |
+| 11 | 上下文窗口监控 | MemGPT | v2.3.0 | `modules/memory.py` - TokenEstimator |
+| 12 | 多因子语义检索 | LangChain | v2.3.0 | `modules/memory.py` - SemanticIndex.search() |
+| 13 | 写作质量一致性检查 | Novelcrafter/Sudowrite | v2.3.0 | `modules/quality.py` - QualityReport |
+| 14 | 自动事实提取 | mem0 | v2.3.0 | `modules/memory.py` - build_fact_extraction_prompt() |
+| 15 | 场景节奏分析 | Novelcrafter | v2.3.0 | `modules/scene.py` - analyze_pacing() |
+| 16 | 深度结构化角色卡 | SillyTavern | v2.3.0 | `modules/character.py` - VoiceProfile, CharacterArc |
+| 17 | 写作质量分析引擎 | Sudowrite | v2.3.0 | `modules/quality.py` - generate_quality_report() |
+| 18 | 多模型运行时切换 | 自研 | v2.0.0+ | `app.py` - CONFIG, /api/config |

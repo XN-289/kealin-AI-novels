@@ -9,26 +9,17 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
 from collections import Counter
 
+# Import unified banned words from central config (single source of truth)
+from .config import BANNED_WORDS, AI_TRANSITION_WORDS
 
-# -- Banned Words / AI Taste Detection --
-
-BANNED_WORDS = [
-    "心中一凛", "眼中闪过一丝", "眼中闪过一抹", "嘴角勾起一抹",
-    "一股XX涌上心头", "仿佛XX一般", "宛如XX", "不由得",
-    "情不自禁", "目光深邃", "意味深长", "若有所思", "恍然大悟",
-    "不禁XX", "眉头微蹙", "嘴角上扬", "心中暗道", "不觉间",
-    "霎时间", "此刻的他", "他深知", "无疑", "显然", "毫无疑问",
-    "不言而喻", "与此同时", "就在这时", "突然间", "猛然间",
-    "刹那间", "恍惚间", "不知不觉", "本能地", "下意识地",
-    "条件反射般", "如同XX一般", "好似XX", "恰似XX", "宛如XX似的",
-    "这一刻他明白", "他知道，",
-]
-
-AI_TRANSITION_WORDS = [
-    "首先", "其次", "再次", "最后", "总之", "综上所述",
-    "值得注意的是", "需要指出的是", "不难发现", "显而易见",
-    "毋庸置疑", "不可否认", "事实上", "实际上",
-]
+# Fix #7: 预编译模板正则表达式，避免每次检测时重复编译
+_TEMPLATE_PATTERNS = []
+for _w in BANNED_WORDS:
+    if "XX" in _w:
+        try:
+            _TEMPLATE_PATTERNS.append((_w, re.compile(_w.replace("XX", "(.+?)"))))
+        except re.error:
+            pass
 
 
 @dataclass
@@ -74,7 +65,7 @@ class QualityReport:
 
 def count_chinese_chars(text: str) -> int:
     """Count Chinese characters in text."""
-    return len(re.findall(r'[一-鿿]', text))
+    return len(re.findall(r'[一-龥]', text))
 
 
 def get_sentences(text: str) -> List[str]:
@@ -112,30 +103,32 @@ def detect_dialogue_tags(text: str) -> List[str]:
 def detect_banned_words(text: str) -> List[Dict]:
     """Detect banned/AI-taste words in text."""
     detections = []
+    # Fix #7: 使用预编译的模板正则
+    for word, pattern in _TEMPLATE_PATTERNS:
+        try:
+            for match in pattern.finditer(text):
+                detections.append({
+                    "word": match.group(0),
+                    "position": match.start(),
+                    "type": "template",
+                })
+        except re.error:
+            pass
+    # 精确匹配（跳过含XX的模板词）
     for word in BANNED_WORDS:
         if "XX" in word:
-            regex_str = word.replace("XX", "(.+?)")
-            try:
-                for match in re.finditer(regex_str, text):
-                    detections.append({
-                        "word": match.group(0),
-                        "position": match.start(),
-                        "type": "template",
-                    })
-            except re.error:
-                pass
-        else:
-            idx = 0
-            while True:
-                idx = text.find(word, idx)
-                if idx == -1:
-                    break
-                detections.append({
-                    "word": word,
-                    "position": idx,
-                    "type": "exact",
-                })
-                idx += len(word)
+            continue
+        idx = 0
+        while True:
+            idx = text.find(word, idx)
+            if idx == -1:
+                break
+            detections.append({
+                "word": word,
+                "position": idx,
+                "type": "exact",
+            })
+            idx += len(word)
     return detections
 
 
@@ -160,6 +153,11 @@ def calculate_ai_taste_score(text: str) -> int:
 
     score = 100
 
+    # Fix #6: 一次性解析文本，缓存结果供后续使用
+    sentences = get_sentences(text)
+    paragraphs = get_paragraphs(text)
+    chinese_count = count_chinese_chars(text)
+
     # Banned words: -3 each
     banned = detect_banned_words(text)
     score -= len(banned) * 3
@@ -169,9 +167,7 @@ def calculate_ai_taste_score(text: str) -> int:
     score -= len(transitions) * 2
 
     # Repetitive sentence patterns
-    sentences = get_sentences(text)
     if len(sentences) > 3:
-        # Check for similar sentence openings
         openings = [s[:4] for s in sentences if len(s) >= 4]
         opening_counts = Counter(openings)
         repeated = sum(c - 1 for c in opening_counts.values() if c > 2)
@@ -179,7 +175,6 @@ def calculate_ai_taste_score(text: str) -> int:
 
     # "的" density
     de_count = count_de_particle(text)
-    chinese_count = count_chinese_chars(text)
     if chinese_count > 0:
         de_density = de_count / chinese_count
         if de_density > 0.06:
@@ -193,16 +188,15 @@ def calculate_ai_taste_score(text: str) -> int:
         avg = sum(lengths) / len(lengths)
         variance = sum((l - avg) ** 2 for l in lengths) / len(lengths)
         if variance < 20:
-            score -= 10  # Too uniform
+            score -= 10
         elif variance < 40:
             score -= 5
 
-    # Paragraph length uniformity
-    paragraphs = get_paragraphs(text)
+    # Paragraph length uniformity（使用已缓存的 paragraphs）
     if len(paragraphs) > 3:
         para_lengths = [len(p) for p in paragraphs]
         para_avg = sum(para_lengths) / len(para_lengths)
-        para_var = sum((l - para_avg) ** 2 for l in para_lengths) / len(para_lengths)
+        para_var = sum((l - para_avg) ** 2 for l in para_lengths) / len(paragraphs)
         if para_var < 200:
             score -= 5
 
@@ -223,8 +217,7 @@ def calculate_ai_taste_score(text: str) -> int:
                 parallel_count += 1
         score -= parallel_count * 5
 
-    # Ending summary/sentiment detection (段尾总结抒情)
-    paragraphs = get_paragraphs(text)
+    # Ending summary/sentiment detection（使用已缓存的 paragraphs）
     summary_endings = ['的意义', '这就是', '或许这就是', '也许这就是', '这大概就是']
     for p in paragraphs:
         last_20 = p[-20:] if len(p) > 20 else p
@@ -583,8 +576,12 @@ def _generate_recommendations(report: QualityReport) -> List[str]:
 
 # -- Prompt Builder for AI Quality Check --
 
-def build_quality_check_prompt(text: str, check_type: str = "full") -> str:
-    """Build a prompt for AI-powered quality checking."""
+def build_quality_check_prompt(text: str, check_type: str = "full",
+                               previous_content: str = None,
+                               style_description: str = None) -> str:
+    """Build a prompt for AI-powered quality checking.
+    融合 novel-qa 的 10 大检查维度和 novel-studio 的写作风格规范。
+    支持传入前文内容和风格描述，用于风格一致性检查。"""
     check_descriptions = {
         "full": "全面质量检查",
         "ai_taste": "AI味检测",
@@ -596,51 +593,94 @@ def build_quality_check_prompt(text: str, check_type: str = "full") -> str:
 
     check_desc = check_descriptions.get(check_type, "全面质量检查")
 
-    return f"""你是一个严格的网文编辑，负责{check_desc}。
+    # 构建风格一致性检查上下文
+    style_context = ""
+    if previous_content:
+        style_context += f"""
+
+═══════════════════════════════════════════
+【前文内容 - 用于风格一致性对比】
+═══════════════════════════════════════════
+{previous_content[:2000]}  # 限制长度避免token过多
+"""
+    if style_description:
+        style_context += f"""
+
+═══════════════════════════════════════════
+【项目风格设定】
+═══════════════════════════════════════════
+{style_description}
+"""
+
+    return f"""帮我看一下这段内容写得怎么样，做{check_desc}。说人话，别用表格。
 
 【检查文本】
 {text}
+{style_context}
 
-【检查维度】
-1. AI味检测（30%）
-   - 禁用词：心中一凛、眼中闪过、嘴角勾起、不由得、仿佛XX一般、宛如XX、情不自禁、目光深邃等
-   - 排比句：三个以上相似句式
-   - 段尾总结抒情：这就是XX的意义啊
+【检查维度——像一个挑剔的读者一样读】
+
+1. AI味检测
+   - 禁用词：有没有"心中一凛"、"眼中闪过"、"嘴角勾起"、"眉头微蹙"、"不禁"、"仿佛XX一般"、"宛如"、"若有所思"、"恍然大悟"、"此刻的他"、"他深知"这些模板句
+   - 排比句：有没有同句式重复三次以上的（"有时候…有时候…有时候…"）
+   - 段尾抒情：有没有"这就是XX的意义啊"这种总结式结尾
+   - 结构化对比：有没有"不是XX而是XX"这种议论文句式
    - "的"字密度：每段超过5个扣分
    - 句式均匀度：全在15-25字=AI味重
-   - 对话标签重复：XX说道反复出现
+   - 对话标签重复："XX说道"、"XX淡淡道"反复出现
+   - 场景切入方式：是不是每段都用"时间状语+主句"开头（"有一天…"、"再后来…"、"那天…"）
+   - 破折号密度：是否过度使用——做解释说明
 
-2. 可读性（25%）
-   - 句子长短交替
-   - 段落长度变化
-   - 对话与叙事比例
-   - 信息密度
+2. 风格一致性
+   - 与前文的句式节奏是否一致（长短句比例、段落长度变化）
+   - 与前文的描写手法是否一致（环境描写比重、心理描写方式）
+   - 与前文的对话风格是否一致（语气词使用、对话标签方式）
+   - 与项目风格设定是否匹配
+   - 是否存在跨章自我复制（同一段话几乎原封不动重复出现）
 
-3. 风格一致性（20%）
-   - 文风是否统一
-   - 用词习惯是否一致
-   - 节奏是否连贯
+3. 人设一致性
+   - 性格是否突变（需有合理铺垫）
+   - 口头禅、说话方式是否一致
+   - 行为模式是否符合人设
 
-4. 吸引力（25%）
-   - 开头是否有钩子
-   - 结尾是否有悬念
-   - 是否有感官细节
-   - 是否有动作/冲突
+4. 时间线一致性
+   - 事件发生的先后顺序是否合理
+   - 日期/年份是否前后矛盾
+
+5. 情节逻辑
+   - 因果关系是否成立
+   - 角色动机是否充分
+   - 行为是否符合常识和情境
+
+6. 对话合理性
+   - 说话方式是否符合人设
+   - 对话中引用的前文事件是否准确
+   - 是否有足够铺垫避免"忽然知情"式的突兀对话
+
+7. 伏笔闭环
+   - 已埋伏笔是否有回收
+   - 是否有悬而未决的线索
+
+8. 场景/环境一致性
+   - 地点描述是否前后一致
+   - 空间布局是否合理
+   - 天气、时间段是否与情节匹配
+
+9. 情感逻辑
+   - 情绪反应的强度是否与刺激匹配
+   - 情绪转变是否有合理过渡
+
+10. 文风自然度
+    - 是否存在跨段/跨章自我复制（同一段话几乎原封不动重复出现）
+    - 是否有"结构化输出"问题（编号式、模板化句式）
+    - 同一意思是否在短时间内反复表达但表述几乎相同
+    - 特定词汇/表达是否过度使用（超过5-6次且分布集中）
+
+11. 吸引力
+    - 开头是否有钩子
+    - 结尾是否有悬念
+    - 是否有感官细节
+    - 是否有动作/冲突
 
 【输出要求】
-请按以下格式输出：
-
-【综合评分】XX/100
-【AI味评分】XX/100
-【可读性评分】XX/100
-【风格一致性评分】XX/100
-【吸引力评分】XX/100
-
-【问题列表】
-1. [严重程度] 问题描述（位置）→ 修改建议
-2. ...
-
-【修改建议】
-1. 具体建议1
-2. 具体建议2
-..."""
+说人话，给我一个整体评价，然后按严重程度列出问题。每个问题说清楚：是什么问题、在哪里、怎么改。不需要打分表格。"""

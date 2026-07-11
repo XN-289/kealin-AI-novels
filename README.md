@@ -389,16 +389,20 @@ kealin-AI-novels/
 ├── app.py                    # Flask 后端，统一多模型接口
 ├── modules/
 │   ├── __init__.py
-│   ├── memory.py             # 分层记忆系统（MemoryConsolidator, TokenEstimator, SemanticIndex）
+│   ├── auth.py               # API 认证模块
 │   ├── character.py          # 角色卡模块
-│   ├── scene.py              # 场景控制模块
-│   └── quality.py            # 写作质量检查模块
+│   ├── config.py             # 集中配置管理
+│   ├── database.py           # SQLite 持久化模块
+│   ├── memory.py             # 分层记忆系统（MemoryConsolidator, TokenEstimator, SemanticIndex）
+│   ├── quality.py            # 写作质量检查模块
+│   └── scene.py              # 场景控制模块
 ├── templates/
 │   ├── index.html            # 主页面
 │   └── docs.html             # 项目文档页面
 ├── static/
-│   ├── style.css             # 样式
-│   └── app.js                # 前端逻辑 + 提示词 + AI 交互
+│   ├── app.js                # 前端逻辑 + 提示词 + AI 交互
+│   ├── canvas-engine.js      # 无限画布引擎（节点、连线、拖拽、缩放）
+│   └── style.css             # 样式
 ├── BEST_PRACTICES.md         # 最佳实践研究记录
 ├── CHANGELOG.md              # 更新日志
 ├── requirements.txt
